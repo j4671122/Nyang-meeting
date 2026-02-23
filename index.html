@@ -1,0 +1,3519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nyang Meeting — Meet Now</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* CSS 상단 :root 부분을 아래로 덮어쓰세요 */
+  :root {
+    --bg: #f0f4f8;        /* 연한 파란 배경 */
+    --surface: #ffffff;
+    --surface2: #e1e7f0;
+    --accent: #3b82f6;    /* 메인 밝은 파란색 (기존 주황) */
+    --accent2: #2563eb;   /* 진한 파란색 */
+    --white: #1a1d2e;
+    --gray: #6b7280;
+    --light-gray: #4b5563;
+    --cat-black: #111118;
+    --ink: #ffffff;
+    --danger: #ef4444;
+    --success: #10b981;
+    --card-bg: #ffffff;
+    --border: rgba(59, 130, 246, 0.1);
+    --blue-primary: #3b82f6;
+    --blue-light: #60a5fa;
+    --blue-bg: #eff6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── App Shell ── */
+  .app-shell {
+    max-width: 390px;
+    margin: 0 auto;
+    position: relative;
+    min-height: 100vh;
+    background: var(--bg);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* ── Screens ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blobPulse {
+    0%,100% { transform: scale(1) rotate(0deg); }
+    50%      { transform: scale(1.05) rotate(3deg); }
+  }
+
+  /* ── Blob SVG backgrounds ── */
+  .blob-bg {
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle at 40% 40%, #f0a45530, transparent 70%);
+    border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%;
+    animation: blobPulse 6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-bg2 {
+    position: absolute;
+    bottom: 80px; left: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle at 40% 40%, #f0a45530, transparent 70%);
+    border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%;
+    animation: blobPulse 6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+
+  /* ── Typography ── */
+  .display { font-family: 'Black Han Sans', sans-serif; }
+
+  /* 전문가 섹션 가로 정렬 컨테이너 */
+  .expert-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 20px 200px; /* 아래쪽 짤림 방지 여백 */
+    overflow-x: auto;
+    scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
+    overflow-y: hidden;
+  }
+  .expert-row::-webkit-scrollbar { display: none; } /* 크롬 스크롤바 숨김 */
+
+  /* 드디어 살아나는 '칸' 스타일 */
+  .expert-card-new {
+    flex-shrink: 0;
+    width: 140px;
+    padding: 20px 16px 170px; /* 아래쪽 여백 확보 */
+    text-align: center;
+    cursor: pointer;
+    background: #ffffff; /* 칸의 배경색 (흰색) */
+    border-radius: 24px; /* 다른 카드들과 맞춘 둥근 모서리 */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06); /* 은은한 그림자 */
+    border: 1px solid rgba(0,0,0,0.03); /* 아주 연한 테두리 */
+    transition: transform 0.2s;
+  }
+
+  .expert-card-new:active { transform: scale(0.95); }
+
+  /* 카드 내부 아이템들 */
+  .expert-emoji { font-size: 40px; margin-bottom: 10px; }
+  .expert-name { 
+    font-size: 14px; 
+    font-weight: 700; 
+    margin-bottom: 4px; 
+    color: #1a1d2e; /* 글자색 (사용자님의 --white 변수값이 어두운색이므로 직접 지정) */
+  }
+  .expert-tag { font-size: 11px; color: var(--accent); font-weight: 500; }
+  .expert-saves { font-size: 10px; color: var(--gray); margin-top: 6px; }
+
+  /* ── StatusBar ── */
+  .statusbar {
+    height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    font-size: 11px;
+    color: var(--gray);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .statusbar-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* ── Top Nav ── */
+  .topnav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px 12px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .topnav-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--white);
+  }
+  .topnav-icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: none; background: var(--surface);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+    transition: background 0.2s;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+  }
+  .topnav-icon-btn:hover { 
+    background: var(--blue-bg); 
+    color: var(--blue-primary);
+  }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 390px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 10px 0 24px;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(79, 70, 229, 0.08);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; transition: all 0.2s;
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 10px; color: var(--gray);
+    border: none; background: none;
+  }
+  .nav-item.active {
+    background: var(--accent);
+    color: white;
+  }
+  .nav-item .nav-icon { font-size: 20px; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed;
+    bottom: 90px; right: calc(50% - 195px + 20px);
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; color: var(--ink);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(240,164,85,0.4);
+    z-index: 99;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(240,164,85,0.6); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+  }
+  .card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+  }
+
+  /* ── Meeting Card ── */
+  .meeting-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+  }
+  .meeting-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+  }
+  .meeting-card-img {
+    width: 100%; height: 140px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--blue-bg), var(--surface2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    position: relative;
+  }
+  .meeting-card-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .meeting-card-body { padding: 14px; }
+  .meeting-card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .meeting-card-meta {
+    display: flex; gap: 10px; align-items: center;
+    font-size: 11px; color: var(--gray); margin-bottom: 10px;
+  }
+  .meeting-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .avatar-stack { display: flex; }
+  .avatar-mini {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--card-bg);
+    margin-right: -6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    overflow: hidden;
+  }
+  .avatar-count { font-size: 11px; color: var(--gray); margin-left: 10px; }
+  .invite-btn {
+    background: var(--accent); color: var(--ink);
+    border: none; border-radius: 20px;
+    padding: 5px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .invite-btn:hover { opacity: 0.85; }
+
+  /* ── 찜 버튼 (Bookmark) ── */
+  .bookmark-btn {
+    background: none; 
+    border: none;
+    cursor: pointer; 
+    padding: 4px;
+    transition: all 0.3s ease;
+    position: relative;
+    width: 28px; 
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .bookmark-btn:active {
+    transform: scale(0.85);
+  }
+
+    /* 기본 상태 (회색) */
+  .paw-emoji {
+    font-size: 20px;
+    transition: all 0.3s ease;
+    color: #d1d5db !important; /* 확실한 회색 */
+    display: inline-block;
+  }
+
+  /* 활성화 상태 (파란색 + 애니메이션) */
+  /* .bookmark-btn에 active 클래스가 붙었을 때 내부의 .paw-emoji 색상을 바꿉니다 */
+  .bookmark-btn.active .paw-emoji {
+    color: #3b82f6 !important; /* 확실한 파란색 */
+    animation: bookmarkPop 0.4s ease-out !important;
+  }
+
+  @keyframes bookmarkPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.4) rotate(-10deg); }
+    60% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ── Chip / Tag ── */
+  .chip {
+    display: inline-flex; align-items: center;
+    background: var(--surface); color: var(--white);
+    border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 18px;
+    font-size: 11px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+    height: 32px;
+    box-shadow: 0 1px 2px rgba(79, 70, 229, 0.05);
+  }
+  .chip.active, .chip:hover {
+    background: var(--blue-primary); color: white;
+    border-color: var(--blue-primary);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  }
+  .chips-row {
+    display: flex; gap: 8px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  .chips-row::-webkit-scrollbar { display: none; }
+  
+  .mini-dropdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 6px 10px;
+    font-size: 10px;
+    color: var(--gray);
+    cursor: pointer;
+    height: 32px;
+    position: relative;
+    white-space: nowrap;
+  }
+  .mini-dropdown-icon {
+    font-size: 8px;
+  }
+
+  /* ── Section Header ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 20px 10px;
+  }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .section-more { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  /* ── Input ── */
+  .input-field {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: var(--white);
+    font-size: 14px;
+    font-family: 'Noto Sans', sans-serif;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field::placeholder { color: var(--gray); }
+  .input-field:focus { border-color: var(--accent); }
+
+  /* ── Button ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 14px;
+    padding: 15px; width: 100%;
+    color: white; font-size: 15px; font-weight: 700;
+    font-family: 'Noto Sans', sans-serif;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(240, 164, 85, 0.3);
+  }
+  .btn-primary:hover { 
+    opacity: 0.9; 
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(240, 164, 85, 0.4);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 15px; width: 100%;
+    color: var(--white); font-size: 15px; font-weight: 500;
+    font-family: 'Noto Sans', sans-serif;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: var(--surface2); }
+
+  /* ── Divider ── */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px; color: var(--gray); font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ────────────────────────────────────────────
+     SCREEN 1: ONBOARDING / SPLASH
+  ──────────────────────────────────────────── */
+  #screen-onboard {
+    background: linear-gradient(135deg, var(--blue-bg), var(--bg));
+    justify-content: center; align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .splash-blob1 {
+    position: absolute; top: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+    border-radius: 60% 40% 50% 70%;
+    animation: blobPulse 5s ease-in-out infinite;
+  }
+  .splash-blob2 {
+    position: absolute; bottom: -60px; right: -60px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(240, 164, 85, 0.15) 0%, transparent 70%);
+    border-radius: 40% 60% 70% 30%;
+    animation: blobPulse 7s ease-in-out infinite reverse;
+  }
+  .splash-content {
+    z-index: 2; text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 24px;
+    animation: slideUp 0.8s ease;
+  }
+  .splash-logo {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 52px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+  .splash-cat {
+    font-size: 100px;
+    line-height: 1;
+    filter: drop-shadow(0 0 30px rgba(240,164,85,0.3));
+    animation: blobPulse 4s ease-in-out infinite;
+  }
+  .splash-tagline {
+    font-size: 16px; color: var(--gray);
+    letter-spacing: 1px;
+  }
+  .splash-tagline span { color: var(--accent); font-weight: 700; }
+  .splash-cta {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 20px;
+    padding: 16px 48px; font-size: 16px; font-weight: 700;
+    font-family: 'Black Han Sans', sans-serif;
+    color: var(--ink); cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 24px rgba(240,164,85,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .splash-cta:hover { transform: scale(1.05); box-shadow: 0 6px 32px rgba(240,164,85,0.6); }
+  .splash-skip {
+    color: var(--gray); font-size: 13px;
+    background: none; border: none;
+    cursor: pointer; font-family: 'Noto Sans', sans-serif;
+    text-decoration: underline;
+  }
+
+  /* ── Onboarding slides ── */
+  .onboard-slides { width: 100%; }
+  .onboard-slide {
+    text-align: center; padding: 40px 30px;
+    display: none;
+  }
+  .onboard-slide.active { display: block; }
+  .onboard-big-text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 30px; line-height: 1.3;
+    margin-bottom: 14px;
+  }
+  .onboard-sub { font-size: 14px; color: var(--gray); line-height: 1.6; }
+  .onboard-dots {
+    display: flex; gap: 8px; justify-content: center; margin: 20px 0;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--surface2);
+    transition: all 0.3s;
+  }
+  .dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+
+  /* ────────────────────────────────────────────
+     SCREEN 2: LOGIN
+  ──────────────────────────────────────────── */
+  #screen-login {
+    background: linear-gradient(135deg, var(--bg), var(--blue-bg));
+    position: relative; overflow: hidden;
+  }
+  .login-blob {
+    position: absolute; top: 0; right: 0;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle at 60% 30%, rgba(240, 164, 85, 0.15), transparent 70%);
+    border-radius: 0 0 80% 0;
+    pointer-events: none;
+  }
+  .login-content {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; padding: 40px 24px;
+    gap: 16px; z-index: 1; margin-top: 60px;
+  }
+  .login-header { margin-bottom: 8px; }
+  .login-greeting {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 28px; margin-bottom: 6px;
+  }
+  .login-greeting span { color: var(--accent); }
+  .login-sub { font-size: 13px; color: var(--gray); }
+  .login-or {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--gray); font-size: 12px;
+  }
+  .login-or::before, .login-or::after {
+    content: ''; flex: 1; border-top: 1px solid var(--border);
+  }
+  .social-login-btns {
+    display: flex; gap: 10px;
+  }
+  .social-btn {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px;
+    color: var(--white); font-size: 20px;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .social-btn:hover { background: var(--surface); }
+  .login-footer {
+    text-align: center; font-size: 12px; color: var(--gray);
+    padding: 20px;
+  }
+  .login-footer span { color: var(--accent); cursor: pointer; }
+  .guest-link {
+    background: none; border: none;
+    color: var(--gray); font-size: 13px;
+    text-decoration: underline; cursor: pointer;
+    font-family: 'Noto Sans', sans-serif;
+    text-align: center;
+    padding: 4px;
+  }
+
+  /* ────────────────────────────────────────────
+     SCREEN 3: HOME
+  ──────────────────────────────────────────── */
+  #screen-home {
+    padding-bottom: 90px;
+    padding-top: 0;
+  }
+  .home-header {
+    padding: 0 20px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 10;
+    margin-top: 0;
+  }
+  .home-logo {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 26px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .home-header-right { display: flex; gap: 8px; }
+  .notif-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--surface2);
+    border: none; color: var(--white); font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+
+  /* Stories */
+  .stories-row {
+    display: flex; gap: 14px;
+    padding: 0 20px 89px; /* 원래 30px에서 45px로 늘려 하단 여백 확보 */
+    overflow-x: auto; 
+    scrollbar-width: none;
+    overflow-y: visible; /* hidden으로 바꾸지 마세요! 글씨가 가려집니다 */
+    margin-bottom: 24px;
+    white-space: nowrap; /* 한 줄 유지 추가 */
+  }
+  .stories-row::-webkit-scrollbar { display: none; }
+  .story-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; cursor: pointer; flex-shrink: 0;
+  }
+  .story-ring {
+    width: 72px; height: 72px; border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, var(--blue-primary), var(--blue-light), var(--accent));
+  }
+  .story-ring.inactive { background: var(--surface2); border: 2px solid var(--border); }
+  .story-inner {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    border: 2px solid var(--bg);
+  }
+  .story-name { 
+    font-size: 10px; color: var(--gray); 
+    max-width: 72px; text-align: center; 
+    line-height: 1.2;
+    min-height: 72px;
+  }
+
+  /* Keyword chips */
+  .keyword-section { 
+    padding: 0 20px 14px; 
+    /* --- 아래 3줄을 추가해 주세요 --- */
+    margin-top: 0px !important;  /* 스토리 글씨(이름)만큼 아래로 밀어냅니다 */
+    position: relative; 
+    z-index: 5;                  /* 스토리 레이어보다 위로 올라오지 않게 함 */
+  }
+  .keyword-label { font-size: 13px; color: var(--gray); margin-bottom: 10px; }
+  .keyword-label span { color: var(--accent); font-weight: 700; }
+
+  /* Hot Meeting Section */
+  .hot-section-bg {
+    margin: 0 20px 20px;
+    background: linear-gradient(135deg, rgba(240, 164, 85, 0.08), rgba(255, 140, 66, 0.06));
+    border: 1px solid rgba(240, 164, 85, 0.15);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(240, 164, 85, 0.08);
+  }
+  .hot-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--accent); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ────────────────────────────────────────────
+     FLASH MEETING SCREEN
+  ──────────────────────────────────────────── */
+  #screen-flash {
+    padding-bottom: 90px;
+  }
+  .meeting-type-tabs {
+    display: flex; gap: 8px;
+    padding: 0 20px 12px;
+  }
+  .meeting-type-tab {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    color: var(--gray);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-family: 'Noto Sans', sans-serif;
+  }
+  .meeting-type-tab.active {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .sort-dropdown-wrapper {
+    position: relative;
+    padding: 0 20px 16px;
+  }
+  .sort-dropdown {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: var(--white);
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Noto Sans', sans-serif;
+  }
+  .sort-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    right: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-top: 4px;
+    z-index: 2000; /* 숫자를 아주 크게 높여주세요 (다른 요소보다 위로) */
+    display: none;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    pointer-events: none; /* 추가: 기본적으로 클릭 무시 */
+  }
+
+  .sort-dropdown-menu.show {
+      display: block;
+      pointer-events: auto; /* 추가: 보일 때만 클릭 가능 */
+  }
+  .sort-dropdown-item {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--white);
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--border);
+  }
+  .sort-dropdown-item:last-child {
+    border-bottom: none;
+  }
+  .sort-dropdown-item:hover {
+    background: var(--surface);
+  }
+  .sort-dropdown-item.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sort-chips {
+    display: flex; gap: 8px;
+    padding: 8px 20px 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .sort-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px 14px;
+    font-size: 12px; color: var(--gray);
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sort-chip.active { background: var(--accent); color: var(--ink); border-color: var(--accent); font-weight: 700; }
+
+  .meeting-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; padding: 0 20px;
+  }
+
+  /* ────────────────────────────────────────────
+     EVENT / EXPERT SCREENS (수정본)
+  ──────────────────────────────────────────── */
+  #screen-event, #screen-expert {
+    padding-bottom: 90px;
+  }
+  .category-scroll {
+    display: flex; gap: 10px;
+    /* 하단 패딩을 16px에서 25px로 살짝 늘려 짤림 방지, 
+       대신 margin-bottom을 마이너스로 주어 다음 레이어와 밀착시킵니다 */
+    padding: 0 20px 60px !important; 
+    overflow-x: auto; 
+    scrollbar-width: none;
+    overflow-y: visible !important; /* 이름표 안짤리게 필수 */
+    margin-bottom: -5px !important; /* 다음 요소와 간격 좁히기 */
+  }
+  .cat-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; cursor: pointer; flex-shrink: 0;
+    transition: transform 0.2s;
+    height: auto; /* 높이 고정 해제 */
+  }
+  .cat-item:hover { transform: scale(1.08); }
+  .cat-circle {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    border: 2px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .cat-item.active .cat-circle { border-color: var(--accent); }
+  .cat-name { 
+    font-size: 10px; 
+    color: var(--gray);
+    text-align: center;
+    min-height: 14px; /* 이름표 공간 확보 */
+  }
+
+  /* 전문가/이벤트 카드 상단 여백 줄이기 */
+  .featured-card {
+    margin: 0 20px 20px; /* 첫 번째 0 부분을 조절해 위쪽 간격 조절 */
+    border-radius: 22px; overflow: hidden;
+    position: relative; cursor: pointer;
+  }
+
+  /* ────────────────────────────────────────────
+     MEETING DETAIL
+  ──────────────────────────────────────────── */
+  #screen-detail {
+    padding-bottom: 110px;
+  }
+  .detail-hero {
+    width: 100%; height: 220px;
+    background: linear-gradient(135deg, #1e2040, #2d1e40);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 90px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .detail-back-btn {
+    position: absolute; top: 20px; left: 16px;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: none; color: #ffffff; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(8px);
+  }
+  .detail-more-btn {
+    position: absolute; top: 20px; right: 16px;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: none; color: #ffffff; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(8px);
+  }
+  .detail-content { padding: 20px; flex: 1; }
+  .detail-type-badge {
+    background: rgba(240,164,85,0.15);
+    color: var(--accent); border: 1px solid rgba(240,164,85,0.3);
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    display: inline-block; margin-bottom: 10px;
+  }
+  .detail-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+  .detail-host {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px;
+    background: var(--surface2);
+    border-radius: 14px; margin-bottom: 16px;
+  }
+  .host-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; border: 2px solid var(--accent);
+  }
+  .host-info { flex: 1; }
+  .host-name { font-size: 14px; font-weight: 700; }
+  .host-tag { font-size: 11px; color: var(--accent); }
+  .host-verify { font-size: 11px; color: var(--gray); }
+  .detail-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 16px;
+  }
+  .info-tile {
+    background: var(--surface2); border-radius: 14px;
+    padding: 12px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .info-tile-label { font-size: 10px; color: var(--gray); }
+  .info-tile-value { font-size: 14px; font-weight: 700; }
+  .detail-description {
+    font-size: 13px; color: var(--light-gray);
+    line-height: 1.7; margin-bottom: 16px;
+  }
+  .participants-section { margin-bottom: 16px; }
+  .participants-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  }
+  .participant-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; border: 2px solid var(--border);
+  }
+  .slots-bar {
+    background: var(--surface2); border-radius: 8px;
+    height: 8px; overflow: hidden; margin-bottom: 8px;
+  }
+  .slots-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    transition: width 0.5s ease;
+  }
+  .tikki-notice {
+    background: rgba(240,164,85,0.1);
+    border: 1px solid rgba(240,164,85,0.25);
+    border-radius: 14px; padding: 14px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .tikki-icon { font-size: 24px; }
+  .tikki-text { font-size: 12px; color: var(--light-gray); line-height: 1.5; }
+  .tikki-text strong { color: var(--accent); }
+  .detail-cta {
+    position: fixed;
+    bottom: 80px; left: 50%; transform: translateX(-50%);
+    width: 350px;
+    display: flex; gap: 10px; z-index: 98;
+  }
+  .detail-cta .invite-btn-large {
+    flex: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 16px;
+    padding: 16px; font-size: 15px; font-weight: 700;
+    font-family: 'Black Han Sans', sans-serif;
+    color: var(--ink); cursor: pointer;
+    box-shadow: 0 4px 20px rgba(240,164,85,0.35);
+    letter-spacing: 0.5px;
+  }
+  .detail-cta .bookmark-large {
+    width: 54px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer;
+  }
+
+  /* ────────────────────────────────────────────
+     SHAKE / PAYMENT OVERLAY
+  ──────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(79, 70, 229, 0.15);
+    backdrop-filter: blur(10px);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+  }
+  .overlay.show { display: flex; }
+  .sheet {
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    width: 100%; max-width: 390px;
+    padding: 24px;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 -4px 20px rgba(79, 70, 229, 0.15);
+  }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .shake-content {
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px; padding: 10px 0 20px;
+  }
+  .shake-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 22px;
+  }
+  .shake-cat {
+    font-size: 80px;
+    animation: blobPulse 0.5s ease-in-out infinite;
+  }
+  .shake-sub { font-size: 13px; color: var(--gray); line-height: 1.6; }
+  .shake-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 16px;
+    padding: 16px; width: 100%;
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 16px; color: var(--ink); cursor: pointer;
+    letter-spacing: 1px;
+  }
+  .shake-paw { font-size: 28px; }
+
+  /* ────────────────────────────────────────────
+     PROFILE SCREEN
+  ──────────────────────────────────────────── */
+  #screen-profile {
+    padding-bottom: 90px;
+  }
+  .profile-header-bg {
+    height: 200px;
+    background: linear-gradient(135deg, var(--blue-bg), rgba(240, 164, 85, 0.1));
+    position: relative; flex-shrink: 0;
+    overflow: visible;
+  }
+  .profile-blob {
+    position: absolute; top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.15), transparent 70%);
+    border-radius: 50%;
+    animation: blobPulse 5s ease-in-out infinite;
+  }
+  .profile-avatar-wrap {
+    position: absolute; bottom: -60px; left: 24px;
+    z-index: 2;
+  }
+  .profile-avatar {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 60px;
+    border: 6px solid var(--bg);
+    box-shadow: 0 4px 20px rgba(240,164,85,0.4);
+  }
+  .profile-body { padding: 80px 24px 20px; }
+  .profile-name-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .profile-name { font-size: 20px; font-weight: 900; }
+  .verify-badge {
+    background: var(--success); color: white;
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+  }
+  .profile-bio { font-size: 13px; color: var(--gray); line-height: 1.5; margin-bottom: 14px; }
+  .profile-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .profile-tag {
+    background: var(--surface2); color: var(--light-gray);
+    border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 10px; font-size: 11px;
+  }
+  .profile-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface2); border-radius: 14px;
+    padding: 12px; text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 900; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--gray); margin-top: 2px; }
+  .profile-calendar-teaser {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px; padding: 16px;
+    margin-bottom: 16px; cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .profile-calendar-teaser:hover { transform: translateY(-2px); }
+  .profile-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .profile-list-item:last-child { border-bottom: none; }
+  .profile-list-left { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .profile-list-icon { font-size: 18px; width: 24px; text-align: center; }
+
+  /* ────────────────────────────────────────────
+     SEARCH SCREEN
+  ──────────────────────────────────────────── */
+  #screen-search {
+    padding-bottom: 90px;
+  }
+  .search-bar-wrap { padding: 0 20px 16px; position: relative; }
+  .search-icon {
+    position: absolute; left: 34px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--gray);
+  }
+  .search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 18px 13px 42px;
+    color: var(--white); font-size: 14px;
+    font-family: 'Noto Sans', sans-serif; width: 100%; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--gray); }
+  .trending-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    cursor: pointer; transition: background 0.2s;
+    border-radius: 12px; margin: 0 8px;
+  }
+  .trending-item:hover { background: var(--surface2); }
+  .trending-left { display: flex; align-items: center; gap: 12px; }
+  .trending-rank {
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    width: 20px;
+  }
+  .trending-text { font-size: 14px; }
+  .trending-count { font-size: 11px; color: var(--gray); }
+
+  /* ────────────────────────────────────────────
+     HOST / CREATE SCREEN
+  ──────────────────────────────────────────── */
+  #screen-host {
+    padding-bottom: 110px;
+  }
+  .host-form { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; color: var(--gray); font-weight: 600; }
+  .form-row { display: flex; gap: 10px; }
+  .type-selector {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  }
+  .type-btn {
+    background: var(--surface2); border: 2px solid var(--border);
+    border-radius: 14px; padding: 12px 8px;
+    color: var(--gray); font-size: 11px;
+    cursor: pointer; text-align: center; transition: all 0.2s;
+    font-family: 'Noto Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .type-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,164,85,0.1); }
+  .type-btn .type-emoji { font-size: 22px; }
+  .img-upload {
+    height: 120px;
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; gap: 6px; transition: border-color 0.2s;
+  }
+  .img-upload:hover { border-color: var(--accent); }
+  .img-upload-icon { font-size: 30px; }
+  .img-upload-text { font-size: 12px; color: var(--gray); }
+  .host-submit {
+    position: fixed;
+    bottom: 80px; left: 50%; transform: translateX(-50%);
+    width: 350px; z-index: 98;
+  }
+
+  /* ────────────────────────────────────────────
+     SETTINGS SCREEN
+  ──────────────────────────────────────────── */
+  #screen-settings {
+    padding-bottom: 90px;
+  }
+  .settings-section { margin-bottom: 8px; }
+  .settings-group {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    margin: 0 20px;
+    overflow: hidden;
+  }
+  .settings-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item:hover { background: var(--surface2); }
+  .settings-left { display: flex; align-items: center; gap: 12px; }
+  .settings-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .settings-text { font-size: 14px; }
+  .settings-arrow { font-size: 13px; color: var(--gray); }
+  .toggle {
+    width: 44px; height: 24px; border-radius: 12px;
+    background: var(--accent);
+    position: relative; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    border-radius: 50%; background: white;
+    transition: transform 0.2s;
+  }
+  .toggle.off { background: var(--surface2); }
+  .toggle.off::after { transform: translateX(-20px); }
+  .version-text { font-size: 12px; color: var(--gray); padding: 16px 0 8px; text-align: center; }
+
+  /* ────────────────────────────────────────────
+     MAP SCREEN
+  ──────────────────────────────────────────── */
+  #screen-map {
+    padding-bottom: 90px;
+  }
+  .map-mock {
+    margin: 0 20px;
+    height: 240px;
+    background: linear-gradient(135deg, #0f1520, #1a2030);
+    border-radius: 20px;
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .map-grid-line {
+    position: absolute;
+    background: rgba(255,255,255,0.04);
+  }
+  .map-pin {
+    position: absolute;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .map-pin:hover { transform: scale(1.2); }
+  .map-pin-label {
+    position: absolute;
+    background: var(--accent); color: var(--ink);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap;
+    transform: translateX(-30%);
+    top: -22px;
+  }
+  .nearby-list { padding: 0 20px; }
+
+  /* ────────────────────────────────────────────
+     NOTIFICATION OVERLAY
+  ──────────────────────────────────────────── */
+  .notif-sheet { max-height: 70vh; overflow-y: auto; }
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .notif-text { font-size: 13px; line-height: 1.5; flex: 1; }
+  .notif-text strong { color: var(--accent); }
+  .notif-time { font-size: 10px; color: var(--gray); margin-top: 3px; }
+
+  /* ────────────────────────────────────────────
+     CALENDAR MINI
+  ──────────────────────────────────────────── */
+  .mini-cal {
+    background: var(--surface2);
+    border-radius: 14px; padding: 12px; overflow: hidden;
+  }
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .cal-month { font-size: 14px; font-weight: 700; }
+  .cal-nav { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 16px; }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .cal-day-header { font-size: 9px; color: var(--gray); text-align: center; padding: 4px 0; }
+  .cal-day {
+    font-size: 11px; text-align: center; padding: 5px 2px;
+    border-radius: 6px; cursor: pointer; transition: background 0.15s;
+  }
+  .cal-day:hover { background: var(--surface); }
+  .cal-day.today { background: var(--accent); color: var(--ink); font-weight: 700; border-radius: 50%; }
+  .cal-day.has-event { position: relative; font-weight: 600; }
+  .cal-day.has-event::after {
+    content: ''; position: absolute;
+    bottom: 1px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .cal-day.empty { opacity: 0; pointer-events: none; }
+
+  /* Calendar Event Detail Overlay */
+  .cal-event-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    animation: fadeIn 0.2s ease;
+  }
+  .cal-event-overlay.show { display: flex; }
+  .cal-event-sheet {
+    background: var(--surface);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 350px;
+    padding: 24px;
+    animation: slideUp 0.3s ease;
+  }
+  .cal-event-date {
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .cal-event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .cal-event-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .cal-event-item:hover { background: var(--surface); }
+  .cal-event-time { font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+  .cal-event-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .cal-event-meta { font-size: 11px; color: var(--gray); }
+  .cal-blank {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  .cal-blank-icon { font-size: 48px; opacity: 0.3; margin-bottom: 12px; }
+  .cal-blank-text { font-size: 14px; color: var(--gray); }
+
+  /* ────────────────────────────────────────────
+     SUCCESS OVERLAY
+  ──────────────────────────────────────────── */
+  .success-sheet {
+    text-align: center;
+    padding: 30px 20px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .success-cat { font-size: 80px; animation: blobPulse 0.6s infinite; }
+  .success-title { font-family: 'Black Han Sans', sans-serif; font-size: 24px; }
+  .success-title span { color: var(--accent); }
+  .success-sub { font-size: 13px; color: var(--gray); line-height: 1.6; }
+  .paw-prints { font-size: 20px; letter-spacing: 8px; opacity: 0.6; }
+
+  /* ────────────────────────────────────────────
+     REPORT OVERLAY
+  ──────────────────────────────────────────── */
+  .report-sheet {
+    padding: 20px 24px 24px;
+  }
+  .report-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .report-subtitle {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .report-step {
+    margin-bottom: 24px;
+  }
+  .report-step-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .report-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .report-option {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .report-option:hover {
+    background: var(--surface);
+  }
+  .report-option.selected {
+    border-color: var(--accent);
+    background: rgba(240,164,85,0.1);
+  }
+  .report-option-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .report-option-text {
+    flex: 1;
+  }
+  .report-option-label {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .report-option-desc {
+    font-size: 11px;
+    color: var(--gray);
+  }
+  .report-textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--white);
+    font-size: 13px;
+    font-family: 'Noto Sans', sans-serif;
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    outline: none;
+  }
+  .report-textarea::placeholder {
+    color: var(--gray);
+  }
+  .report-upload-area {
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .report-upload-area:hover {
+    border-color: var(--accent);
+  }
+  .report-upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .report-upload-text {
+    font-size: 12px;
+    color: var(--gray);
+  }
+  .report-warning {
+    background: rgba(224,85,85,0.1);
+    border: 1px solid rgba(224,85,85,0.3);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .report-warning-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .report-warning-text {
+    font-size: 12px;
+    color: var(--light-gray);
+    line-height: 1.5;
+  }
+  .report-warning-text strong {
+    color: var(--danger);
+  }
+  .report-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .report-btn-cancel {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans', sans-serif;
+  }
+  .report-btn-submit {
+    flex: 2;
+    background: linear-gradient(135deg, var(--danger), #c04545);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans', sans-serif;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  /* ── Demo nav bar ── */
+  .demo-nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    padding: 10px 20px; gap: 8px; z-index: 300;
+    overflow-x: auto; scrollbar-width: none;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+  }
+  .demo-nav::-webkit-scrollbar { display: none; }
+  .demo-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 12px;
+    color: var(--gray); font-size: 11px; cursor: pointer;
+    white-space: nowrap; transition: all 0.2s;
+    font-family: 'Noto Sans', sans-serif;
+  }
+  .demo-btn.active { 
+    background: var(--blue-primary); 
+    color: white; 
+    border-color: var(--blue-primary); 
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  }
+
+  .app-shell { margin-top: 46px; height: calc(100vh - 46px); }
+
+</style>
+</head>
+<body>
+
+<!-- Demo Nav -->
+<nav class="demo-nav" id="demoNav">
+  <button class="demo-btn" onclick="showScreen('onboard')">Onboard</button>
+  <button class="demo-btn" onclick="showScreen('login')">Login</button>
+  <button class="demo-btn active" onclick="showScreen('home')">Home</button>
+  <button class="demo-btn" onclick="showScreen('flash')">Meeting</button>
+  <button class="demo-btn" onclick="showScreen('event')">Event</button>
+  <button class="demo-btn" onclick="showScreen('expert')">Expert</button>
+  <button class="demo-btn" onclick="showScreen('detail')">Detail</button>
+  <button class="demo-btn" onclick="showScreen('host')">Host</button>
+  <button class="demo-btn" onclick="showScreen('search')">Search</button>
+  <button class="demo-btn" onclick="showScreen('map')">Map</button>
+  <button class="demo-btn" onclick="showScreen('saved')">Saved</button>
+  <button class="demo-btn" onclick="showScreen('friends')">Friends</button>
+  <button class="demo-btn" onclick="showScreen('profile')">Profile</button>
+  <button class="demo-btn" onclick="showScreen('settings')">Settings</button>
+</nav>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ════════════════════ ONBOARDING ════════════════════ -->
+  <div id="screen-onboard" class="screen active">
+    <div class="splash-blob1"></div>
+    <div class="splash-blob2"></div>
+    <div class="splash-content">
+      <div class="splash-cat">😾</div>
+      <div class="splash-logo">NYANG</div>
+      <div class="splash-tagline">It's simple, <span>just meet!</span></div>
+      <div class="onboard-slides">
+        <div class="onboard-slide active" id="slide-0">
+          <div class="onboard-big-text">Tired of being<br>alone? 😼</div>
+          <div class="onboard-sub">Somewhere in the city, people like you<br>are waiting to connect right now.</div>
+        </div>
+        <div class="onboard-slide" id="slide-1">
+          <div class="onboard-big-text">⚡ Flash Meeting<br>Right Now!</div>
+          <div class="onboard-sub">No reservations, no hassle.<br>Join spontaneous meetups with one tap.</div>
+        </div>
+        <div class="onboard-slide" id="slide-2">
+          <div class="onboard-big-text">🐾 Shake to<br>Verify!</div>
+          <div class="onboard-sub">Shake your phone on-site for auto verification.<br>Payment & attendance check—all in one!</div>
+        </div>
+      </div>
+      <div class="onboard-dots">
+        <div class="dot active" id="dot-0"></div>
+        <div class="dot" id="dot-1"></div>
+        <div class="dot" id="dot-2"></div>
+      </div>
+      <button class="splash-cta" id="onboardNext" onclick="nextSlide()">Next</button>
+      <button class="splash-skip" onclick="showScreen('login')">Skip</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ LOGIN ════════════════════ -->
+  <div id="screen-login" class="screen">
+    <div class="login-blob"></div>
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="login-content">
+      <div class="login-header">
+        <div class="login-greeting">Welcome back! <span>😼</span></div>
+        <div class="login-sub">Please enter your email and password</div>
+      </div>
+      <input class="input-field" type="email" placeholder="Email" />
+      <input class="input-field" type="password" placeholder="Password" />
+      <div style="text-align:right; margin-top:-8px;">
+        <span style="font-size:12px; color:var(--accent); cursor:pointer;">Forgot password?</span>
+      </div>
+      <button class="btn-primary" onclick="showScreen('home')">Sign In</button>
+      <div class="login-or">or</div>
+      <div class="social-login-btns">
+        <button class="social-btn">🇬</button>
+        <button class="social-btn">🍎</button>
+        <button class="social-btn">📱</button>
+      </div>
+      <button class="btn-secondary" onclick="showScreen('home')">Create Account</button>
+      <button class="guest-link" onclick="showScreen('home')">Continue as Guest</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ HOME ════════════════════ -->
+  <div id="screen-home" class="screen">
+    <div class="blob-bg"></div>
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="home-header">
+      <div class="home-logo">NYANG</div>
+      <div class="home-header-right">
+        <button class="topnav-icon-btn" onclick="showScreen('settings')">⚙️</button>
+        <button class="topnav-icon-btn" onclick="showReportOverlay()" style="background:rgba(224,85,85,0.15);">🚨</button>
+        <button class="notif-btn" onclick="showNotif()">🔔<span class="notif-dot"></span></button>
+      </div>
+    </div>
+
+    <!-- Stories -->
+    <div class="stories-row">
+      <div class="story-item">
+        <div class="story-ring">
+          <div class="story-inner">🐱</div>
+        </div>
+        <div class="story-name">Board<br>Games</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring">
+          <div class="story-inner">⚽</div>
+        </div>
+        <div class="story-name">Futsal<br>Match</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring">
+          <div class="story-inner">🎨</div>
+        </div>
+        <div class="story-name">Drawing<br>Class</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring inactive">
+          <div class="story-inner">📚</div>
+        </div>
+        <div class="story-name">Book<br>Club</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring inactive">
+          <div class="story-inner">🍜</div>
+        </div>
+        <div class="story-name">Ramen<br>Tour</div>
+      </div>
+    </div>
+
+    <!-- Keywords -->
+    <div class="keyword-section">
+      <div class="keyword-label"><span>#Recommended</span> meetups for you!</div>
+      <div class="chips-row" style="padding:0;">
+        <div class="chip active" onclick="showScreen('search')" style="padding:6px 10px;">🔍</div>
+        <div class="chip">#BoardGames</div>
+        <div class="chip">#Running</div>
+        <div class="chip">#FoodTour</div>
+        <div class="chip">#Reading</div>
+        <div class="chip">#English</div>
+        <div class="chip">#Yoga</div>
+      </div>
+    </div>
+
+    <!-- Hot nearby -->
+    <div class="hot-section-bg">
+      <div class="hot-label">🔥 Hot meetups near you!</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="meeting-card" onclick="showScreen('detail')">
+          <div class="meeting-card-img" style="height:100px; font-size:36px;">🎲
+            <div class="meeting-card-badge">⚡ Flash</div>
+          </div>
+          <div class="meeting-card-body" style="padding:10px;">
+            <div class="meeting-card-title" style="font-size:13px;">Board Game Meetup</div>
+            <div class="meeting-card-meta" style="font-size:10px;">📍 200m · Today 8PM</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">😸</div>
+                <div class="avatar-mini">🐶</div>
+                <div class="avatar-mini">😺</div>
+              </div>
+              <span style="font-size:10px; color:var(--accent); font-weight:700;">3/8</span>
+            </div>
+          </div>
+        </div>
+        <div class="meeting-card" onclick="showScreen('detail')">
+          <div class="meeting-card-img" style="height:100px; font-size:36px;">🏃
+            <div class="meeting-card-badge" style="background:var(--success);">Event</div>
+          </div>
+          <div class="meeting-card-body" style="padding:10px;">
+            <div class="meeting-card-title" style="font-size:13px;">Han River Run</div>
+            <div class="meeting-card-meta" style="font-size:10px;">📍 1.2km · Tomorrow 7AM</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🏃</div>
+                <div class="avatar-mini">💪</div>
+              </div>
+              <span style="font-size:10px; color:var(--success); font-weight:700;">12/20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular section -->
+    <div class="section-header">
+      <span class="section-title">🌟 Popular Meetups</span>
+      <span class="section-more" onclick="showScreen('flash')">More →</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:0 20px 20px;">
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🎸</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px;">🎵 Event</div>
+            <div class="meeting-card-title">Live Jam with Indie Band</div>
+            <div class="meeting-card-meta">📍 Hongdae · This Saturday · 💰 $15</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🎸</div>
+                <div class="avatar-mini">🎹</div>
+                <div class="avatar-mini">🎺</div>
+                <div class="avatar-mini">+</div>
+              </div>
+              <button class="invite-btn">Invite</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">👨‍🏫 Featured Experts</span>
+      <span class="section-more" onclick="showScreen('expert')">More →</span>
+    </div>
+    
+    <div class="expert-row">
+      <div class="expert-card-new" onclick="showScreen('expert')">
+        <div class="expert-emoji">🧘</div>
+        <div class="expert-name">Minji Coach</div>
+        <div class="expert-tag">Yoga · Pilates</div>
+        <div class="expert-saves">❤️ 284 saves</div>
+      </div>
+      
+      <div class="expert-card-new" onclick="showScreen('expert')">
+        <div class="expert-emoji">🏋️</div>
+        <div class="expert-name">Junhyuk Trainer</div>
+        <div class="expert-tag">Fitness · CrossFit</div>
+        <div class="expert-saves">❤️ 193 saves</div>
+      </div>
+    
+      <div class="expert-card-new" onclick="showScreen('expert')">
+        <div class="expert-emoji">🎨</div>
+        <div class="expert-name">Sora Artist</div>
+        <div class="expert-tag">Painting · DIY</div>
+        <div class="expert-saves">❤️ 152 saves</div>
+      </div>
+    </div>
+
+    <!-- New Section: This Week's Events -->
+    <div class="section-header">
+      <span class="section-title">📅 This Week's Must-Join</span>
+      <span class="section-more" onclick="showScreen('event')">More →</span>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div class="meeting-card" style="cursor:pointer;" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:linear-gradient(135deg, #667eea, #764ba2); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🎭</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px; background:#667eea;">🎪 Event</div>
+            <div class="meeting-card-title">Theater Night: Romeo & Juliet</div>
+            <div class="meeting-card-meta">📍 National Theater · Fri 7:30PM · 💰 $30</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🎭</div>
+                <div class="avatar-mini">🎬</div>
+                <div class="avatar-mini">📽️</div>
+                <div class="avatar-mini">+</div>
+              </div>
+              <button class="invite-btn">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Section: Nearby Activities -->
+    <div class="section-header">
+      <span class="section-title">📍 Happening Nearby</span>
+      <span class="section-more" onclick="showScreen('map')">View Map →</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px 20px;">
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:90px; font-size:32px;">🎸</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:12px;">Live Music Jam</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 150m · 🕐 Now</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span style="font-size:10px; color:var(--success);">4/8</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:90px; font-size:32px;">🍕</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:12px;">Pizza & Movie</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 300m · 🕐 6PM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span style="font-size:10px; color:var(--accent);">6/10</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Section: Weekend Specials -->
+    <div class="section-header">
+      <span class="section-title">🌟 Weekend Specials</span>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div class="card" style="background:linear-gradient(135deg, rgba(240,164,85,0.15), rgba(232,135,90,0.1)); border:1px solid rgba(240,164,85,0.3); padding:16px; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="font-size:36px;">🏖️</div>
+          <div style="flex:1;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:3px;">Beach Cleanup & BBQ</div>
+            <div style="font-size:11px; color:var(--gray);">Saturday 10AM · Haeundae Beach</div>
+          </div>
+          <div style="background:var(--accent); color:var(--ink); border-radius:20px; padding:4px 12px; font-size:11px; font-weight:700;">Join</div>
+        </div>
+        <div style="font-size:12px; color:var(--light-gray); line-height:1.5;">
+          Help clean the beach in the morning, then enjoy a free BBQ lunch! All equipment provided. 🌊
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ FLASH MEETING ════════════════════ -->
+  <div id="screen-flash" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <div class="topnav-title">🎯 Meetings</div>
+      <button class="topnav-icon-btn" onclick="showScreen('search')">🔍</button>
+    </div>
+    
+    <!-- Meeting Type Tabs -->
+    <div class="meeting-type-tabs">
+      <button class="meeting-type-tab active" onclick="switchMeetingTab(this, 'flash')">⚡ Flash</button>
+      <button class="meeting-type-tab" onclick="switchMeetingTab(this, 'event')">🎪 Event</button>
+      <button class="meeting-type-tab" onclick="switchMeetingTab(this, 'expert')">👨‍🏫 Expert</button>
+    </div>
+    
+    <div class="chips-row">
+      <div class="chip active">🔍 All</div>
+      <div class="mini-dropdown" onclick="toggleSortDropdown()" style="position:relative;">
+        <span id="selectedSort">Popular</span>
+        <span class="mini-dropdown-icon">▼</span>
+        <div class="sort-dropdown-menu" id="sortDropdownMenu" style="width:140px; left:0; top:36px;">
+          <div class="sort-dropdown-item active" onclick="selectSort(this, 'Popular')">Popular</div>
+          <div class="sort-dropdown-item" onclick="selectSort(this, 'Recent')">Recent</div>
+          <div class="sort-dropdown-item" onclick="selectSort(this, 'Recommended')">Recommended</div>
+          <div class="sort-dropdown-item" onclick="selectSort(this, 'Nearby')">Nearby</div>
+        </div>
+      </div>
+      <div class="chip">#BoardGames</div>
+      <div class="chip">#Food</div>
+      <div class="chip">#Walking</div>
+      <div class="chip">#Cafe</div>
+    </div>
+    
+    <!-- Remove old dropdown wrapper -->
+    
+    <div class="meeting-grid">
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img">🎲
+          <div class="meeting-card-badge">Near you!</div>
+        </div>
+        <div class="meeting-card-body">
+          <div class="meeting-card-title">Spontaneous Board Games</div>
+          <div class="meeting-card-meta">📍 200m<br>⏰ Today 8PM</div>
+          <div class="meeting-card-footer">
+            <span style="font-size:11px; color:var(--accent);">3/8</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img">☕
+          <div class="meeting-card-badge">Popular</div>
+        </div>
+        <div class="meeting-card-body">
+          <div class="meeting-card-title">Cafe Chat Meetup</div>
+          <div class="meeting-card-meta">📍 500m<br>⏰ Today 7:30PM</div>
+          <div class="meeting-card-footer">
+            <span style="font-size:11px; color:var(--accent);">5/6</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img">🏃</div>
+        <div class="meeting-card-body">
+          <div class="meeting-card-title">Evening Run</div>
+          <div class="meeting-card-meta">📍 800m<br>⏰ Today 9PM</div>
+          <div class="meeting-card-footer">
+            <span style="font-size:11px; color:var(--success);">2/10</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img">🍜</div>
+        <div class="meeting-card-body">
+          <div class="meeting-card-title">Ramen Together</div>
+          <div class="meeting-card-meta">📍 1.1km<br>⏰ Today 6:30PM</div>
+          <div class="meeting-card-footer">
+            <span style="font-size:11px; color:var(--danger);">7/8</span>
+            <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+              <i class="fas fa-paw paw-emoji"></i> 
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="fab" onclick="showScreen('host')">＋</button>
+  </div>
+
+  <!-- ════════════════════ EVENT MEETING ════════════════════ -->
+  <div id="screen-event" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <div class="topnav-title">🎪 Event Meetings</div>
+      <button class="topnav-icon-btn" onclick="showScreen('search')">🔍</button>
+    </div>
+    <div class="category-scroll">
+      <div class="cat-item active">
+        <div class="cat-circle">🏃</div>
+        <div class="cat-name">Sports</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-circle">✂️</div>
+        <div class="cat-name">Beauty</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-circle">🎨</div>
+        <div class="cat-name">Arts</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-circle">📚</div>
+        <div class="cat-name">Education</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-circle">🍳</div>
+        <div class="cat-name">Cooking</div>
+      </div>
+      <div class="cat-item">
+        <div class="cat-circle">🎵</div>
+        <div class="cat-name">Music</div>
+      </div>
+    </div>
+    <!-- Featured -->
+    <div class="featured-card" onclick="showScreen('detail')">
+      <div class="featured-img">🏊</div>
+      <div class="featured-overlay">
+        <div class="featured-badge">🏆 Most Popular This Week</div>
+        <div class="featured-title">Han River Open Water Swim Challenge</div>
+        <div class="featured-meta">📍 Ttukseom Han River Park · This Sunday · 💰 $20</div>
+      </div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">🏃 Sports Meetups</span>
+    </div>
+    <div style="display:flex; gap:12px; padding:0 20px 20px; overflow-x:auto; scrollbar-width:none;">
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">⚽</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">Futsal 5 vs 5</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Mapo · Sat 2PM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--accent);">6/10</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Invite</button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">🧘</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">Outdoor Yoga Class</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Seoul Forest · Sun 8AM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--success);">4/15</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Invite</button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">🏊</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">Swimming Club</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Olympic Pool · Fri 7PM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--accent);">8/12</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Invite</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arts & Culture -->
+    <div class="section-header">
+      <span class="section-title">🎨 Arts & Culture</span>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div class="meeting-card" style="cursor:pointer;" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:linear-gradient(135deg, #f093fb, #f5576c); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🖼️</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px; background:#f5576c;">🎨 Event</div>
+            <div class="meeting-card-title">Modern Art Exhibition Tour</div>
+            <div class="meeting-card-meta">📍 National Museum · This Sat · 💰 $12</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🎨</div>
+                <div class="avatar-mini">🖼️</div>
+                <div class="avatar-mini">📸</div>
+              </div>
+              <button class="invite-btn">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Food & Drinks -->
+    <div class="section-header">
+      <span class="section-title">🍽️ Food & Drinks</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px 20px;">
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:100px; font-size:36px;">🍷</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:12px;">Wine Tasting</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Itaewon · Fri 7PM</div>
+          <div style="margin-top:6px; font-size:10px; color:var(--accent);">8/12</div>
+        </div>
+      </div>
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:100px; font-size:36px;">🍣</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:12px;">Sushi Making Class</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Gangnam · Sat 3PM</div>
+          <div style="margin-top:6px; font-size:10px; color:var(--success);">5/10</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Music & Performance -->
+    <div class="section-header">
+      <span class="section-title">🎵 Music & Performance</span>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div class="card" style="background:linear-gradient(135deg, rgba(85,96,240,0.15), rgba(142,84,233,0.1)); border:1px solid rgba(85,96,240,0.3); padding:16px; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="font-size:40px;">🎤</div>
+          <div style="flex:1;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:3px;">Karaoke Night Party</div>
+            <div style="font-size:11px; color:var(--gray);">Saturday 9PM · Hongdae</div>
+          </div>
+          <div style="background:rgba(85,96,240,0.8); color:white; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:700;">Join</div>
+        </div>
+        <div style="font-size:12px; color:var(--light-gray); line-height:1.5;">
+          Sing your heart out with new friends! Private room for 20 people. All genres welcome! 🎶
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <span style="background:rgba(85,96,240,0.2); color:rgba(85,96,240,1); padding:3px 10px; border-radius:12px; font-size:10px;">#Karaoke</span>
+          <span style="background:rgba(85,96,240,0.2); color:rgba(85,96,240,1); padding:3px 10px; border-radius:12px; font-size:10px;">#Party</span>
+          <span style="background:rgba(85,96,240,0.2); color:rgba(85,96,240,1); padding:3px 10px; border-radius:12px; font-size:10px;">#Music</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning & Skills -->
+    <div class="section-header">
+      <span class="section-title">📚 Learning & Skills</span>
+    </div>
+    <div style="display:flex; gap:12px; padding:0 20px 30px; overflow-x:auto; scrollbar-width:none;">
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">💻</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">Coding Workshop</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Gangnam · Sun 2PM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--accent);">7/15</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Join</button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">📷</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">Photography Walk</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Bukchon · Sat 10AM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--success);">4/8</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Join</button>
+          </div>
+        </div>
+      </div>
+      <div class="meeting-card" style="flex-shrink:0; width:180px; cursor:pointer;" onclick="showScreen('detail')">
+        <div class="meeting-card-img" style="height:110px; font-size:40px;">🗣️</div>
+        <div class="meeting-card-body" style="padding:10px;">
+          <div class="meeting-card-title" style="font-size:13px;">English Speaking</div>
+          <div class="meeting-card-meta" style="font-size:10px;">📍 Cafe · Every Wed 7PM</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--accent);">6/12</span>
+            <button class="invite-btn" style="font-size:11px; padding:4px 10px;">Join</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ EXPERT MEETING ════════════════════ -->
+  <div id="screen-expert" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <div class="topnav-title">👨‍🏫 Expert Meetings</div>
+      <button class="topnav-icon-btn" onclick="showScreen('search')">🔍</button>
+    </div>
+    <div class="category-scroll">
+      <div class="cat-item active"><div class="cat-circle">🔥</div><div class="cat-name">All</div></div>
+      <div class="cat-item"><div class="cat-circle">💪</div><div class="cat-name">Fitness</div></div>
+      <div class="cat-item"><div class="cat-circle">✂️</div><div class="cat-name">Beauty</div></div>
+      <div class="cat-item"><div class="cat-circle">🧘</div><div class="cat-name">Yoga</div></div>
+      <div class="cat-item"><div class="cat-circle">📸</div><div class="cat-name">Photo</div></div>
+    </div>
+    <!-- Ad Banner -->
+    <div style="margin: 0 20px 16px; background: linear-gradient(135deg, rgba(85,96,240,0.2), rgba(240,164,85,0.1)); border: 1px solid rgba(85,96,240,0.3); border-radius: 18px; padding: 14px; display:flex; align-items:center; gap:12px; cursor:pointer;">
+      <div style="font-size:36px;">⭐</div>
+      <div>
+        <div style="font-size:12px; color: #8899ff; font-weight:700; margin-bottom:3px;">AD · Expert Promotion</div>
+        <div style="font-size:13px; font-weight:700;">3 Free PT Sessions Event!</div>
+        <div style="font-size:11px; color:var(--gray);">Apply now for 1 extra session</div>
+      </div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">❤️ Most Saved Experts</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; padding:0 20px 20px;">
+      <div class="card" style="padding:14px; display:flex; gap:14px; align-items:center; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="font-size:48px; flex-shrink:0;">🧘</div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span style="font-size:14px; font-weight:700;">Minji Coach</span>
+            <span style="background:var(--success); color:white; font-size:9px; padding:2px 7px; border-radius:10px;">Verified</span>
+          </div>
+          <div style="font-size:12px; color:var(--accent); margin-bottom:4px;">Yoga · Pilates · Meditation</div>
+          <div style="font-size:11px; color:var(--gray);">❤️ 284 saves · ⭐ 4.9 · 128 reviews</div>
+        </div>
+        <button class="invite-btn">Book</button>
+      </div>
+      <div class="card" style="padding:14px; display:flex; gap:14px; align-items:center; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="font-size:48px; flex-shrink:0;">🏋️</div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span style="font-size:14px; font-weight:700;">Junhyuk Trainer</span>
+            <span style="background:var(--success); color:white; font-size:9px; padding:2px 7px; border-radius:10px;">Verified</span>
+          </div>
+          <div style="font-size:12px; color:var(--accent); margin-bottom:4px;">Fitness · CrossFit · Diet</div>
+          <div style="font-size:11px; color:var(--gray);">❤️ 193 saves · ⭐ 4.8 · 97 reviews</div>
+        </div>
+        <button class="invite-btn">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ MEETING DETAIL ════════════════════ -->
+  <div id="screen-detail" class="screen">
+    <div class="detail-hero">
+      🎲
+      <button class="detail-back-btn" onclick="history.back(); showScreen('home')">←</button>
+      <button class="detail-more-btn">⋯</button>
+    </div>
+    <div class="detail-content">
+      <div class="detail-type-badge">⚡ Flash Meeting</div>
+      <div class="detail-title">Spontaneous Board Game Night 🎲</div>
+      <div class="detail-host">
+        <div class="host-avatar">😾</div>
+        <div class="host-info">
+          <div class="host-name">Grumpy Cat · Host</div>
+          <div class="host-tag">12 hosted · ⭐ 4.9</div>
+          <div class="host-verify">✅ ID verified</div>
+        </div>
+        <button style="background:none; border:1px solid var(--border); border-radius:10px; color:var(--white); padding:6px 12px; font-size:12px; cursor:pointer; font-family:'Noto Sans';">Follow</button>
+      </div>
+      <div class="detail-info-grid">
+        <div class="info-tile">
+          <div class="info-tile-label">📍 Location</div>
+          <div class="info-tile-value">Hongdae Board Game Cafe</div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-label">⏰ Time</div>
+          <div class="info-tile-value">Today 8:00 PM</div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-label">💰 Fee</div>
+          <div class="info-tile-value">$15 <span style="font-size:10px; color:var(--gray);">(incl. drinks)</span></div>
+        </div>
+        <div class="info-tile">
+          <div class="info-tile-label">👥 Capacity</div>
+          <div class="info-tile-value" style="color:var(--accent);">3 / 8</div>
+        </div>
+      </div>
+      <div class="detail-description">
+        Board game lovers unite! Beginners welcome 🎉<br>
+        We'll play Catan, Ticket to Ride, Bang, and more.<br>
+        All ages welcome, 20s-40s. No dating please!
+      </div>
+      <div class="participants-section">
+        <div class="section-title" style="font-size:14px; margin-bottom:6px;">👥 Current Participants</div>
+        <div class="slots-bar"><div class="slots-fill" style="width:37.5%"></div></div>
+        <div style="font-size:11px; color:var(--gray); margin-bottom:8px;">3 joined · 5 spots left</div>
+        <div class="participants-row">
+          <div class="participant-avatar">😸</div>
+          <div class="participant-avatar">🐶</div>
+          <div class="participant-avatar">😺</div>
+          <div style="font-size:12px; color:var(--gray); margin-left:4px;">+ 5 spots left</div>
+        </div>
+      </div>
+      <div class="tikki-notice">
+        <div class="tikki-icon">💳</div>
+        <div class="tikki-text">
+          <strong>Tikkie prepayment</strong> required.<br>
+          After signing up, shake your phone on-site to verify!<br>
+          <span style="color:var(--gray);">Payment transferred to host after verification.</span>
+        </div>
+      </div>
+    </div>
+    <div class="detail-cta">
+      <button class="invite-btn-large" onclick="showShake()">🐾 Invite — Join Now</button>
+      <button class="bookmark-large" onclick="toggleBookmark(this)">🐾</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ HOST / CREATE ════════════════════ -->
+  <div id="screen-host" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <button class="topnav-icon-btn" onclick="showScreen('flash')">←</button>
+      <div class="topnav-title">Create Meeting ✨</div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="host-form">
+      <div class="form-group">
+        <div class="form-label">Meeting Type</div>
+        <div class="type-selector">
+          <button class="type-btn active" onclick="selectType(this)">
+            <span class="type-emoji">⚡</span>Flash
+          </button>
+          <button class="type-btn" onclick="selectType(this)">
+            <span class="type-emoji">🎪</span>Event
+          </button>
+          <button class="type-btn" onclick="selectType(this)">
+            <span class="type-emoji">👨‍🏫</span>Expert
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Meeting Title</div>
+        <input class="input-field" placeholder="e.g., Spontaneous board game night!" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Category</div>
+        <div class="chips-row" style="padding:0; flex-wrap:wrap;">
+          <div class="chip active" onclick="selectChip(this)">🎲 Board Games</div>
+          <div class="chip" onclick="selectChip(this)">🏃 Sports</div>
+          <div class="chip" onclick="selectChip(this)">🍜 Food</div>
+          <div class="chip" onclick="selectChip(this)">🎨 Arts</div>
+        </div>
+        <input class="input-field" placeholder="Or type custom category..." style="margin-top:8px;" id="customCategory" />
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <div class="form-label">Date/Time</div>
+          <input class="input-field" type="datetime-local" style="color:var(--white);" />
+        </div>
+        <div class="form-group" style="flex:1;">
+          <div class="form-label">Max Capacity</div>
+          <input class="input-field" type="number" placeholder="8" />
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Location</div>
+        <input class="input-field" placeholder="📍 Search location..." />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Fee (Optional)</div>
+        <input class="input-field" placeholder="💰 $0 (Free)" id="feeInput" oninput="toggleFeeReason()" />
+      </div>
+      <div class="form-group" id="feeReasonGroup" style="display:none;">
+        <div class="form-label" style="color:var(--accent);">Fee Reason (Required) *</div>
+        <textarea class="input-field" rows="2" placeholder="e.g., Covers drinks, venue rental, materials..." id="feeReason"></textarea>
+        <div style="font-size:11px; color:var(--gray); margin-top:4px;">※ Only actual costs like drinks/entry fee allowed</div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Description</div>
+        <textarea class="input-field" rows="3" placeholder="Tell us about your meetup..."></textarea>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Cover Photo (Optional)</div>
+        <div class="img-upload">
+          <div class="img-upload-icon">📸</div>
+          <div class="img-upload-text">Tap to add photo</div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+    <div class="host-submit">
+      <button class="btn-primary" onclick="showScreen('detail')">🐾 Create Meeting</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ SEARCH ════════════════════ -->
+  <div id="screen-search" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <button class="topnav-icon-btn" onclick="showScreen('home')">←</button>
+      <div class="topnav-title">Search</div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="search-bar-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" placeholder="Search meetups, keywords, content..." />
+    </div>
+    <div class="chips-row" style="margin-bottom:16px;">
+      <div class="chip active">All</div>
+      <div class="chip">⚡ Flash</div>
+      <div class="chip">🎪 Event</div>
+      <div class="chip">👨‍🏫 Expert</div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">🔥 Trending Now</span>
+    </div>
+    <div>
+      <div class="trending-item">
+        <div class="trending-left">
+          <div class="trending-rank">1</div>
+          <div class="trending-text">Board game meetup</div>
+        </div>
+        <div class="trending-count">🔥 1,248</div>
+      </div>
+      <div class="trending-item">
+        <div class="trending-left">
+          <div class="trending-rank">2</div>
+          <div class="trending-text">Han River running crew</div>
+        </div>
+        <div class="trending-count">🔥 897</div>
+      </div>
+      <div class="trending-item">
+        <div class="trending-left">
+          <div class="trending-rank">3</div>
+          <div class="trending-text">Hongdae cafe chat</div>
+        </div>
+        <div class="trending-count">↑ 723</div>
+      </div>
+      <div class="trending-item">
+        <div class="trending-left">
+          <div class="trending-rank">4</div>
+          <div class="trending-text">Outdoor yoga</div>
+        </div>
+        <div class="trending-count">↑ 512</div>
+      </div>
+      <div class="trending-item">
+        <div class="trending-left">
+          <div class="trending-rank">5</div>
+          <div class="trending-text">Indie band jam</div>
+        </div>
+        <div class="trending-count">NEW</div>
+      </div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">🕐 Recent Searches</span>
+      <span class="section-more">Clear all</span>
+    </div>
+    <div style="padding: 0 20px; display:flex; gap:8px; flex-wrap:wrap;">
+      <div class="chip">#BoardGames</div>
+      <div class="chip">#Hongdae</div>
+      <div class="chip">#Running</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ MAP ════════════════════ -->
+  <div id="screen-map" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <div class="topnav-title">📍 Nearby Meetups</div>
+      <button class="topnav-icon-btn" onclick="showScreen('search')">🔍</button>
+    </div>
+    <div class="chips-row" style="margin-bottom:12px;">
+      <div class="chip active">🏥 Vet Clinic</div>
+      <div class="chip">🏪 Pet Shop</div>
+      <div class="chip">✂️ Grooming</div>
+      <div class="chip">⚡ Flash</div>
+    </div>
+    <!-- Map Mock -->
+    <div class="map-mock">
+      <div class="map-grid-line" style="width:100%; height:1px; top:33%;"></div>
+      <div class="map-grid-line" style="width:100%; height:1px; top:66%;"></div>
+      <div class="map-grid-line" style="width:1px; height:100%; left:33%; top:0;"></div>
+      <div class="map-grid-line" style="width:1px; height:100%; left:66%; top:0;"></div>
+      <div style="position:absolute; top:40%; left:45%; transform:translate(-50%,-50%);">
+        <div style="width:16px; height:16px; border-radius:50%; background:var(--accent); border:3px solid white; box-shadow:0 0 12px var(--accent);"></div>
+      </div>
+      <div class="map-pin" style="top:25%; left:20%;" onclick="showScreen('detail')">
+        🎲
+        <div class="map-pin-label">Board Games · 3/8</div>
+      </div>
+      <div class="map-pin" style="top:55%; left:60%;" onclick="showScreen('detail')">
+        ☕
+        <div class="map-pin-label">Cafe · 5/6</div>
+      </div>
+      <div class="map-pin" style="top:70%; left:30%;" onclick="showScreen('detail')">
+        🏃
+        <div class="map-pin-label">Running · 2/10</div>
+      </div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">📍 Nearby List</span>
+    </div>
+    <div class="nearby-list" style="display:flex; flex-direction:column; gap:10px; padding-bottom:20px;">
+      <div class="card" style="padding:14px; display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="font-size:36px;">🎲</div>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:700;">Spontaneous Board Games</div>
+          <div style="font-size:11px; color:var(--gray);">📍 200m · Today 8PM · 3/8</div>
+        </div>
+        <button class="invite-btn" style="font-size:12px;">Join</button>
+      </div>
+      <div class="card" style="padding:14px; display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="showScreen('detail')">
+        <div style="font-size:36px;">☕</div>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:700;">Cafe Chat Meetup</div>
+          <div style="font-size:11px; color:var(--gray);">📍 500m · Today 7:30PM · 5/6</div>
+        </div>
+        <button class="invite-btn" style="font-size:12px; background:var(--danger);">Almost Full</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ PROFILE ════════════════════ -->
+  <div id="screen-profile" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="profile-header-bg">
+      <div class="profile-blob"></div>
+      <div style="position:absolute; top:14px; right:14px; display:flex; gap:8px; z-index:3;">
+        <button class="topnav-icon-btn" onclick="showScreen('saved')">🐾</button>
+        <button class="topnav-icon-btn" onclick="showScreen('settings')">⚙️</button>
+      </div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">😾</div>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="profile-name-row">
+        <div class="profile-name">Grumpy Cat</div>
+        <div class="verify-badge">✅ Verified</div>
+      </div>
+      <div class="profile-bio">MBTI: ENFP · Love board games / running / food tours 😼 People say I look scary but I'm actually friendly</div>
+      <div class="profile-tags">
+        <div class="profile-tag">#BoardGames</div>
+        <div class="profile-tag">#Running</div>
+        <div class="profile-tag">#ENFP</div>
+        <div class="profile-tag">#Seoul</div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-card">
+          <div class="stat-num">24</div>
+          <div class="stat-label">Joined</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">12</div>
+          <div class="stat-label">Hosted</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer; position:relative;" onclick="showScreen('friends')">
+          <div class="stat-num">38</div>
+          <div class="stat-label">👥 Friends</div>
+          <div style="position:absolute; top:8px; right:8px; font-size:10px; background:var(--accent); color:var(--ink); border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:700;">3</div>
+        </div>
+      </div>
+      
+      <!-- Friend Action Buttons -->
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button class="btn-secondary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:12px;" onclick="showScreen('friends')">
+          <span style="font-size:18px;">👥</span>
+          <span>Friends</span>
+        </button>
+        <button class="btn-secondary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:12px;" onclick="showShakeFriendAdd()">
+          <span style="font-size:18px;">📳</span>
+          <span>Shake to Add</span>
+        </button>
+      </div>
+      <!-- Mini Calendar -->
+      <div class="profile-calendar-teaser">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:13px; font-weight:700;">📅 My Schedule</span>
+          <span style="font-size:11px; color:var(--accent);">Google Synced ✓</span>
+        </div>
+        <div class="mini-cal">
+          <div class="cal-header">
+            <button class="cal-nav">‹</button>
+            <span class="cal-month">February 2026</span>
+            <button class="cal-nav">›</button>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-header">Su</div>
+            <div class="cal-day-header">Mo</div>
+            <div class="cal-day-header">Tu</div>
+            <div class="cal-day-header">We</div>
+            <div class="cal-day-header">Th</div>
+            <div class="cal-day-header">Fr</div>
+            <div class="cal-day-header">Sa</div>
+            <div class="cal-day empty">.</div>
+            <div class="cal-day">1</div>
+            <div class="cal-day">2</div>
+            <div class="cal-day">3</div>
+            <div class="cal-day">4</div>
+            <div class="cal-day">5</div>
+            <div class="cal-day">6</div>
+            <div class="cal-day has-event" onclick="showCalendarEvent(7)">7</div>
+            <div class="cal-day" onclick="showCalendarEvent(8)">8</div>
+            <div class="cal-day" onclick="showCalendarEvent(9)">9</div>
+            <div class="cal-day" onclick="showCalendarEvent(10)">10</div>
+            <div class="cal-day" onclick="showCalendarEvent(11)">11</div>
+            <div class="cal-day" onclick="showCalendarEvent(12)">12</div>
+            <div class="cal-day" onclick="showCalendarEvent(13)">13</div>
+            <div class="cal-day has-event" onclick="showCalendarEvent(14)">14</div>
+            <div class="cal-day" onclick="showCalendarEvent(15)">15</div>
+            <div class="cal-day" onclick="showCalendarEvent(16)">16</div>
+            <div class="cal-day today" onclick="showCalendarEvent(17)">17</div>
+            <div class="cal-day" onclick="showCalendarEvent(18)">18</div>
+            <div class="cal-day" onclick="showCalendarEvent(19)">19</div>
+            <div class="cal-day" onclick="showCalendarEvent(20)">20</div>
+            <div class="cal-day has-event" onclick="showCalendarEvent(21)">21</div>
+            <div class="cal-day" onclick="showCalendarEvent(22)">22</div>
+            <div class="cal-day" onclick="showCalendarEvent(23)">23</div>
+            <div class="cal-day" onclick="showCalendarEvent(24)">24</div>
+            <div class="cal-day" onclick="showCalendarEvent(25)">25</div>
+            <div class="cal-day" onclick="showCalendarEvent(26)">26</div>
+            <div class="cal-day" onclick="showCalendarEvent(27)">27</div>
+            <div class="cal-day" onclick="showCalendarEvent(28)">28</div>
+          </div>
+        </div>
+      </div>
+      <!-- Profile menu -->
+      <div class="card" style="padding: 0 14px;">
+        <div class="profile-list-item">
+          <div class="profile-list-left">
+            <span class="profile-list-icon">🐾</span>
+            <span>Saved Meetups</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="background:var(--accent); color:var(--ink); border-radius:10px; padding:1px 8px; font-size:11px; font-weight:700;">5</span>
+            <span style="color:var(--gray); font-size:14px;">›</span>
+          </div>
+        </div>
+        <div class="profile-list-item">
+          <div class="profile-list-left">
+            <span class="profile-list-icon">📝</span>
+            <span>Edit Profile</span>
+          </div>
+          <span style="color:var(--gray); font-size:14px;">›</span>
+        </div>
+        <div class="profile-list-item">
+          <div class="profile-list-left">
+            <span class="profile-list-icon">💬</span>
+            <span>Support</span>
+          </div>
+          <span style="color:var(--gray); font-size:14px;">›</span>
+        </div>
+        <div class="profile-list-item" style="border:none;">
+          <div class="profile-list-left">
+            <span class="profile-list-icon">✉️</span>
+            <span>Send Feedback</span>
+          </div>
+          <span style="color:var(--gray); font-size:14px;">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ SAVED MEETUPS SCREEN ════════════════════ -->
+  <div id="screen-saved" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <button class="topnav-icon-btn" onclick="showScreen('profile')">←</button>
+      <div class="topnav-title">🐾 Saved Meetups</div>
+      <div style="width:38px;"></div>
+    </div>
+
+    <div class="chips-row" style="margin-bottom:16px;">
+      <div class="chip active">All (5)</div>
+      <div class="chip">Flash (2)</div>
+      <div class="chip">Event (2)</div>
+      <div class="chip">Expert (1)</div>
+    </div>
+
+    <div style="padding:0 20px 20px; display:flex; flex-direction:column; gap:12px;">
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🎲</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px;">⚡ Flash</div>
+            <div class="meeting-card-title">Board Game Night</div>
+            <div class="meeting-card-meta">📍 Hongdae · Today 8PM · 💰 $15</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">😸</div>
+                <div class="avatar-mini">🐶</div>
+                <div class="avatar-mini">😺</div>
+              </div>
+              <span style="font-size:11px; color:var(--accent);">3/8</span>
+            </div>
+          </div>
+          <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+            <i class="fas fa-paw paw-emoji"></i> 
+          </button>
+        </div>
+      </div>
+
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🏃</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px; background:var(--success);">🎪 Event</div>
+            <div class="meeting-card-title">Morning Run Crew</div>
+            <div class="meeting-card-meta">📍 Han River · Tomorrow 7AM · 💰 Free</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🏃</div>
+                <div class="avatar-mini">💪</div>
+              </div>
+              <span style="font-size:11px; color:var(--success);">12/20</span>
+            </div>
+          </div>
+          <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+            <i class="fas fa-paw paw-emoji"></i> 
+          </button>
+        </div>
+      </div>
+
+      <div class="meeting-card" onclick="showScreen('detail')">
+        <div style="display:flex; gap:12px; padding:14px;">
+          <div style="width:70px; height:70px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:34px; flex-shrink:0;">🧘</div>
+          <div style="flex:1;">
+            <div class="meeting-card-badge" style="position:static; margin-bottom:6px; background:rgba(85,96,240,0.8);">👨‍🏫 Expert</div>
+            <div class="meeting-card-title">Yoga with Minji</div>
+            <div class="meeting-card-meta">📍 Seoul Forest · This Sat · 💰 $20</div>
+            <div class="meeting-card-footer">
+              <div class="avatar-stack">
+                <div class="avatar-mini">🧘</div>
+                <div class="avatar-mini">🙏</div>
+              </div>
+              <span style="font-size:11px; color:var(--accent);">8/15</span>
+            </div>
+          </div>
+          <button class="bookmark-btn" onclick="toggleBookmark(this); event.stopPropagation();">
+            <i class="fas fa-paw paw-emoji"></i> 
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ FRIENDS SCREEN ════════════════════ -->
+  <div id="screen-friends" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <button class="topnav-icon-btn" onclick="showScreen('profile')">←</button>
+      <div class="topnav-title">👥 Friends</div>
+      <button class="topnav-icon-btn" onclick="showShakeFriendAdd()">📳</button>
+    </div>
+
+    <!-- Friend Stories -->
+    <div class="section-header" style="padding-top:0;">
+      <span class="section-title">📖 Friend Stories</span>
+    </div>
+    <div class="stories-row">
+      <div class="story-item">
+        <div class="story-ring">
+          <div class="story-inner">😸</div>
+        </div>
+        <div class="story-name">Sarah</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring">
+          <div class="story-inner">🐶</div>
+        </div>
+        <div class="story-name">Mike</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring inactive">
+          <div class="story-inner">😺</div>
+        </div>
+        <div class="story-name">Emma</div>
+      </div>
+      <div class="story-item">
+        <div class="story-ring inactive">
+          <div class="story-inner">🦊</div>
+        </div>
+        <div class="story-name">Alex</div>
+      </div>
+    </div>
+
+    <!-- Friend List -->
+    <div class="section-header">
+      <span class="section-title">💬 Recent Chats</span>
+      <span class="section-more">See All</span>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="profile-list-item" onclick="alert('Opening chat with Sarah...')">
+          <div class="profile-list-left">
+            <div style="width:48px; height:48px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:24px;">😸</div>
+            <div>
+              <div style="font-size:14px; font-weight:700;">Sarah Johnson</div>
+              <div style="font-size:12px; color:var(--gray);">See you at board game night! 🎲</div>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <div style="font-size:10px; color:var(--gray);">2m ago</div>
+            <div style="background:var(--accent); color:var(--ink); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">3</div>
+          </div>
+        </div>
+        <div class="profile-list-item" onclick="alert('Opening chat with Mike...')">
+          <div class="profile-list-left">
+            <div style="width:48px; height:48px; border-radius:50%; background:var(--success); display:flex; align-items:center; justify-content:center; font-size:24px;">🐶</div>
+            <div>
+              <div style="font-size:14px; font-weight:700;">Mike Chen</div>
+              <div style="font-size:12px; color:var(--gray);">Thanks for the running tips!</div>
+            </div>
+          </div>
+          <div style="font-size:10px; color:var(--gray);">1h ago</div>
+        </div>
+        <div class="profile-list-item" style="border:none;" onclick="alert('Opening chat with Emma...')">
+          <div class="profile-list-left">
+            <div style="width:48px; height:48px; border-radius:50%; background:rgba(85,96,240,0.3); display:flex; align-items:center; justify-content:center; font-size:24px;">😺</div>
+            <div>
+              <div style="font-size:14px; font-weight:700;">Emma Wilson</div>
+              <div style="font-size:12px; color:var(--gray);">Let's grab coffee sometime</div>
+            </div>
+          </div>
+          <div style="font-size:10px; color:var(--gray);">Yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Friends -->
+    <div class="section-header">
+      <span class="section-title">👥 All Friends (38)</span>
+    </div>
+    <div style="padding:0 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div class="card" style="padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:40px; margin-bottom:8px;">😸</div>
+        <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Sarah</div>
+        <div style="font-size:10px; color:var(--gray);">24 meetings</div>
+      </div>
+      <div class="card" style="padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:40px; margin-bottom:8px;">🐶</div>
+        <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Mike</div>
+        <div style="font-size:10px; color:var(--gray);">18 meetings</div>
+      </div>
+      <div class="card" style="padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:40px; margin-bottom:8px;">😺</div>
+        <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Emma</div>
+        <div style="font-size:10px; color:var(--gray);">12 meetings</div>
+      </div>
+      <div class="card" style="padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:40px; margin-bottom:8px;">🦊</div>
+        <div style="font-size:13px; font-weight:700; margin-bottom:4px;">Alex</div>
+        <div style="font-size:10px; color:var(--gray);">9 meetings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ SETTINGS ════════════════════ -->
+  <div id="screen-settings" class="screen">
+    <div class="statusbar">
+      <span>5:13 PM</span>
+      <div class="statusbar-icons">📶 🔋</div>
+    </div>
+    <div class="topnav">
+      <button class="topnav-icon-btn" onclick="showScreen('profile')">←</button>
+      <div class="topnav-title">Settings</div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="settings-section">
+      <div style="padding: 4px 20px 8px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px;">Account</div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(240,164,85,0.15);">👤</div>
+            <span class="settings-text">Account Management</span>
+          </div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(85,200,144,0.15);">✅</div>
+            <span class="settings-text">ID Verification</span>
+          </div>
+          <span style="font-size:11px; color:var(--success);">Complete</span>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(85,96,240,0.15);">🌐</div>
+            <span class="settings-text">Language</span>
+          </div>
+          <span style="font-size:12px; color:var(--gray);">English ›</span>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div style="padding: 4px 20px 8px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px;">Notifications</div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(240,164,85,0.15);">🔔</div>
+            <span class="settings-text">Push Notifications</span>
+          </div>
+          <div class="toggle" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(232,85,85,0.15);">❤️</div>
+            <span class="settings-text">Save Notifications</span>
+          </div>
+          <div class="toggle" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(85,192,240,0.15);">💬</div>
+            <span class="settings-text">Chat Notifications</span>
+          </div>
+          <div class="toggle off" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div style="padding: 4px 20px 8px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px;">App Info</div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(160,160,200,0.1);">📋</div>
+            <span class="settings-text">Terms of Service</span>
+          </div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(160,160,200,0.1);">🔒</div>
+            <span class="settings-text">Privacy Policy</span>
+          </div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-item">
+          <div class="settings-left">
+            <div class="settings-icon" style="background:rgba(160,160,200,0.1);">ℹ️</div>
+            <span class="settings-text">Version Info</span>
+          </div>
+          <span style="font-size:12px; color:var(--gray);">v1.0.0</span>
+        </div>
+      </div>
+    </div>
+    <div class="version-text">Nyang Meeting v1.0.0 · Made with 😾 by SCC</div>
+    <div style="padding: 0 20px 30px;">
+      <button class="btn-secondary" style="color:var(--danger); border-color:rgba(224,85,85,0.3);" onclick="showScreen('login')">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ BOTTOM NAV ════════════════════ -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" onclick="showScreen('home'); setNav(this)" data-screen="home">
+      <span class="nav-icon">🏠</span>Home
+    </button>
+    <button class="nav-item" onclick="showScreen('flash'); setNav(this)" data-screen="flash">
+      <span class="nav-icon">🎯</span>Meeting
+    </button>
+    <button class="nav-item" onclick="showScreen('search'); setNav(this)" data-screen="search">
+      <span class="nav-icon">🔍</span>Search
+    </button>
+    <button class="nav-item" onclick="showScreen('map'); setNav(this)" data-screen="map">
+      <span class="nav-icon">📍</span>Map
+    </button>
+    <button class="nav-item" onclick="showScreen('profile'); setNav(this)" data-screen="profile">
+      <span class="nav-icon">😾</span>Me
+    </button>
+  </nav>
+
+</div><!-- app-shell -->
+
+<!-- ════════════ SHAKE OVERLAY ════════════ -->
+<div class="overlay" id="shakeOverlay" onclick="closeShake()">
+  <div class="sheet" onclick="e => e.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="shake-content">
+      <div class="shake-cat">😾</div>
+      <div class="shake-title">Shake on-site! 📳</div>
+      <div class="shake-sub">
+        When you arrive at the venue, shake your phone.<br>
+        <strong style="color:var(--accent);">Tikkie payment</strong> will be completed and verified.<br>
+        Payment transferred to host after verification 🐾
+      </div>
+      <div style="display:flex; gap:10px; width:100%;">
+        <button class="shake-btn" style="flex:1;" onclick="showSuccess()">📳 Shake to Verify!</button>
+      </div>
+      <button style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; font-family:'Noto Sans';" onclick="closeShake()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SUCCESS OVERLAY ════════════ -->
+<div class="overlay" id="successOverlay" onclick="closeSuccess()">
+  <div class="sheet" onclick="e => e.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="success-sheet">
+      <div class="success-cat">😸</div>
+      <div class="paw-prints">🐾🐾🐾</div>
+      <div class="success-title">Meow! <span>You're In!</span></div>
+      <div class="success-sub">
+        Successfully joined Board Game Night!<br>
+        See you today at 8PM, Hongdae Board Game Cafe 🎲
+      </div>
+      <button class="shake-btn" onclick="closeSuccess(); showScreen('home')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ NOTIF OVERLAY ════════════ -->
+<div class="overlay" id="notifOverlay" onclick="closeNotif()">
+  <div class="sheet" onclick="e => e.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div style="font-size:16px; font-weight:700; margin-bottom:16px;">🔔 Notifications</div>
+    <div class="notif-sheet">
+      <div class="notif-item">
+        <div class="notif-avatar">🎲</div>
+        <div style="flex:1;">
+          <div class="notif-text">New participant joined <strong>Board Game Night</strong>! (3/8)</div>
+          <div class="notif-time">Just now</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-avatar">😸</div>
+        <div style="flex:1;">
+          <div class="notif-text"><strong>Junhyuk Trainer</strong> saved your meetup!</div>
+          <div class="notif-time">5 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-avatar">⚡</div>
+        <div style="flex:1;">
+          <div class="notif-text"><strong>New Flash Meeting</strong> 200m away!</div>
+          <div class="notif-time">12 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-avatar">🐾</div>
+        <div style="flex:1;">
+          <div class="notif-text"><strong>Cafe Chat</strong> almost full! 1 spot left.</div>
+          <div class="notif-time">30 min ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ REPORT OVERLAY ════════════ -->
+<div class="overlay" id="reportOverlay" onclick="closeReportOverlay()">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:85vh; overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div class="report-sheet">
+      <div class="report-title">
+        <span>🚨</span>
+        <span>Report Safety Issue</span>
+      </div>
+      <div class="report-subtitle">
+        We take safety seriously. Your report will be reviewed immediately and the user will be temporarily restricted until investigation is complete.
+      </div>
+
+      <!-- Step 1: Type Selection -->
+      <div class="report-step">
+        <div class="report-step-title">Step 1: Select Issue Type</div>
+        <div class="report-options">
+          <div class="report-option" onclick="selectReportType(this, 'noshow')">
+            <div class="report-option-icon">👻</div>
+            <div class="report-option-text">
+              <div class="report-option-label">No-Show</div>
+              <div class="report-option-desc">Didn't attend scheduled meeting</div>
+            </div>
+          </div>
+          <div class="report-option" onclick="selectReportType(this, 'harassment')">
+            <div class="report-option-icon">😠</div>
+            <div class="report-option-text">
+              <div class="report-option-label">Harassment</div>
+              <div class="report-option-desc">Threatening, abusive, or unwanted behavior</div>
+            </div>
+          </div>
+          <div class="report-option" onclick="selectReportType(this, 'inappropriate')">
+            <div class="report-option-icon">⚠️</div>
+            <div class="report-option-text">
+              <div class="report-option-label">Inappropriate Behavior</div>
+              <div class="report-option-desc">Violated community guidelines</div>
+            </div>
+          </div>
+          <div class="report-option" onclick="selectReportType(this, 'fake')">
+            <div class="report-option-icon">🎭</div>
+            <div class="report-option-text">
+              <div class="report-option-label">Fake Identity</div>
+              <div class="report-option-desc">Using false information or photos</div>
+            </div>
+          </div>
+          <div class="report-option" onclick="selectReportType(this, 'other')">
+            <div class="report-option-icon">📝</div>
+            <div class="report-option-text">
+              <div class="report-option-label">Other</div>
+              <div class="report-option-desc">Other safety concern</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Details -->
+      <div class="report-step">
+        <div class="report-step-title">Step 2: Provide Details (Optional)</div>
+        <textarea class="report-textarea" placeholder="Please describe what happened. The more details you provide, the better we can help..."></textarea>
+      </div>
+
+      <!-- Step 3: Evidence -->
+      <div class="report-step">
+        <div class="report-step-title">Step 3: Attach Evidence (Optional)</div>
+        <div class="report-upload-area">
+          <div class="report-upload-icon">📸</div>
+          <div class="report-upload-text">Tap to upload screenshots or photos</div>
+        </div>
+      </div>
+
+      <!-- Warning Notice -->
+      <div class="report-warning">
+        <div class="report-warning-icon">🛡️</div>
+        <div class="report-warning-text">
+          <strong>Immediate Action:</strong> Upon submission, this user will be temporarily restricted from creating or joining meetings until our team completes the review. Serious violations may result in permanent ban and police notification.
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="report-buttons">
+        <button class="report-btn-cancel" onclick="closeReportOverlay()">Cancel</button>
+        <button class="report-btn-submit" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SHAKE FRIEND ADD OVERLAY ════════════ -->
+<div class="overlay" id="shakeFriendOverlay" onclick="closeShakeFriendAdd()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="shake-content">
+      <div class="shake-cat" style="animation: shake 1s ease-in-out infinite;">📳</div>
+      <div class="shake-title">Shake to Add Friend!</div>
+      <div class="shake-sub">
+        Both users shake your phones at the same time.<br>
+        We'll detect nearby devices and connect you! 👥
+      </div>
+      <div style="background:rgba(240,164,85,0.1); border:1px solid rgba(240,164,85,0.3); border-radius:12px; padding:12px; margin:10px 0; width:100%;">
+        <div style="font-size:13px; color:var(--light-gray); text-align:center;">
+          <strong style="color:var(--accent);">Searching nearby...</strong><br>
+          <span style="font-size:11px; color:var(--gray);">Make sure Bluetooth is on</span>
+        </div>
+      </div>
+      <button style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; font-family:'Noto Sans', sans-serif;" onclick="closeShakeFriendAdd()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ CALENDAR EVENT OVERLAY ════════════ -->
+<div class="cal-event-overlay" id="calEventOverlay" onclick="closeCalendarEvent()">
+  <div class="cal-event-sheet" onclick="event.stopPropagation()">
+    <div class="cal-event-date" id="calEventDate">February 7, 2026</div>
+    <div class="cal-event-list" id="calEventList">
+      <!-- Events will be populated by JavaScript -->
+    </div>
+    <button style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px; width:100%; margin-top:16px; color:var(--white); font-size:14px; cursor:pointer; font-family:'Noto Sans', sans-serif;" onclick="closeCalendarEvent()">Close</button>
+  </div>
+</div>
+
+<style>
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px) rotate(-5deg); }
+  20%, 40%, 60%, 80% { transform: translateX(10px) rotate(5deg); }
+}
+</style>
+
+<script>
+  let currentScreen = 'home';
+  let currentSlide  = 0;
+  const totalSlides = 3;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + id);
+    if (target) target.classList.add('active');
+    currentScreen = id;
+    // Update demo nav
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.demo-btn').forEach(b => {
+      if (b.textContent.trim() === {
+        onboard:'Onboard', login:'Login', home:'Home',
+        flash:'Meeting', event:'Event', expert:'Expert',
+        detail:'Detail', host:'Host', search:'Search',
+        map:'Map', saved:'Saved', friends:'Friends', profile:'Profile', settings:'Settings'
+      }[id]) b.classList.add('active');
+    });
+    // Hide bottom nav on certain screens
+    const noNav = ['onboard','login','detail','host','saved','friends'];
+    document.getElementById('bottomNav').style.display = noNav.includes(id) ? 'none' : 'flex';
+  }
+
+  function setNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      document.getElementById('slide-' + currentSlide).classList.remove('active');
+      document.getElementById('dot-'   + currentSlide).classList.remove('active');
+      currentSlide++;
+      document.getElementById('slide-' + currentSlide).classList.add('active');
+      document.getElementById('dot-'   + currentSlide).classList.add('active');
+      if (currentSlide === totalSlides - 1) {
+        document.getElementById('onboardNext').textContent = 'Get Started 😼';
+        document.getElementById('onboardNext').onclick = () => showScreen('login');
+      }
+    } else {
+      showScreen('login');
+    }
+  }
+
+  function showShake() {
+    document.getElementById('shakeOverlay').classList.add('show');
+  }
+  function closeShake() {
+    document.getElementById('shakeOverlay').classList.remove('show');
+  }
+  function showSuccess() {
+    document.getElementById('shakeOverlay').classList.remove('show');
+    document.getElementById('successOverlay').classList.add('show');
+  }
+  function closeSuccess() {
+    document.getElementById('successOverlay').classList.remove('show');
+  }
+  function showNotif() {
+    document.getElementById('notifOverlay').classList.add('show');
+  }
+  function closeNotif() {
+    document.getElementById('notifOverlay').classList.remove('show');
+  }
+
+  function toggleSwitch(el) {
+    el.classList.toggle('off');
+  }
+
+  function selectType(el) {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function selectChip(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Fee reason toggle
+  function toggleFeeReason() {
+    const feeInput = document.getElementById('feeInput');
+    const feeReasonGroup = document.getElementById('feeReasonGroup');
+    if (feeInput && feeReasonGroup) {
+      const value = feeInput.value.trim();
+      if (value && value !== '$0' && value !== '0') {
+        feeReasonGroup.style.display = 'flex';
+      } else {
+        feeReasonGroup.style.display = 'none';
+      }
+    }
+  }
+
+  // Report overlay functions
+  let selectedReportType = null;
+
+  function showReportOverlay() {
+    document.getElementById('reportOverlay').classList.add('show');
+  }
+
+  function closeReportOverlay() {
+    document.getElementById('reportOverlay').classList.remove('show');
+    selectedReportType = null;
+    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+  }
+
+  function selectReportType(el, type) {
+    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedReportType = type;
+  }
+
+  function submitReport() {
+    if (!selectedReportType) {
+      alert('Please select an issue type');
+      return;
+    }
+    closeReportOverlay();
+    alert('Report submitted. Thank you for helping keep our community safe. The reported user has been temporarily restricted pending review.');
+  }
+
+  // Shake friend add
+  function showShakeFriendAdd() {
+    document.getElementById('shakeFriendOverlay').classList.add('show');
+  }
+
+  function closeShakeFriendAdd() {
+    document.getElementById('shakeFriendOverlay').classList.remove('show');
+  }
+
+  // Calendar event overlay
+  const calendarEvents = {
+    7: [
+      { time: '2:00 PM', title: 'Board Game Meetup', location: 'Hongdae', type: 'flash' }
+    ],
+    14: [
+      { time: '7:30 PM', title: 'Valentine Dinner Party', location: 'Itaewon', type: 'event' }
+    ],
+    21: [
+      { time: '10:00 AM', title: 'Yoga with Minji', location: 'Seoul Forest', type: 'expert' },
+      { time: '6:00 PM', title: 'Futsal Match', location: 'Mapo Stadium', type: 'event' }
+    ]
+  };
+
+  function showCalendarEvent(day) {
+    const overlay = document.getElementById('calEventOverlay');
+    const dateEl = document.getElementById('calEventDate');
+    const listEl = document.getElementById('calEventList');
+    
+    // Set date
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    dateEl.textContent = `${monthNames[1]} ${day}, 2026`;
+    
+    // Clear previous events
+    listEl.innerHTML = '';
+    
+    // Check if day has events
+    if (calendarEvents[day]) {
+      calendarEvents[day].forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'cal-event-item';
+        eventDiv.onclick = () => { closeCalendarEvent(); showScreen('detail'); };
+        
+        const typeColors = {
+          flash: 'var(--accent)',
+          event: 'var(--success)',
+          expert: 'rgba(85,96,240,0.8)'
+        };
+        
+        eventDiv.innerHTML = `
+          <div class="cal-event-time" style="color:${typeColors[event.type] || 'var(--accent)'};">${event.time}</div>
+          <div class="cal-event-title">${event.title}</div>
+          <div class="cal-event-meta">📍 ${event.location}</div>
+        `;
+        listEl.appendChild(eventDiv);
+      });
+    } else {
+      // Show blank state
+      listEl.innerHTML = `
+        <div class="cal-blank">
+          <div class="cal-blank-icon">📅</div>
+          <div class="cal-blank-text">No events scheduled for this day</div>
+        </div>
+      `;
+    }
+    
+    overlay.classList.add('show');
+  }
+
+  function closeCalendarEvent() {
+    document.getElementById('calEventOverlay').classList.remove('show');
+  }
+
+  // 1. 메인 정렬 드롭다운 (정렬방식)
+  function toggleSortDropdown() {
+    // 이벤트가 바닥으로 퍼지는 걸 막아 메뉴가 바로 닫히지 않게 합니다.
+    if (window.event) window.event.stopPropagation();
+    
+    const menu = document.getElementById('sortDropdownMenu');
+    if (menu) {
+      menu.classList.toggle('show');
+      console.log("메인 드롭다운 토글됨");
+    }
+  }
+
+  // 2. 항목 선택 함수
+  // ── 드롭다운 관련 통합 함수 ──
+
+// 1. 드롭다운 열기/닫기
+function toggleSortDropdown() {
+  // 이벤트 전파 방지 (이게 없으면 열리자마자 닫힘)
+  if (window.event) window.event.stopPropagation();
+  
+  const menu = document.getElementById('sortDropdownMenu');
+  if (menu) {
+      // 다른 메뉴가 열려있다면 닫기
+      document.querySelectorAll('.dropdown-menu').forEach(m => {
+          if (m !== menu) m.classList.remove('show');
+      });
+      menu.classList.toggle('show');
+  }
+}
+
+// 2. 정렬 항목 선택
+function selectSort(el, sortName) {
+  if (window.event) window.event.stopPropagation();
+  
+  // 선택된 항목 표시 변경
+  document.querySelectorAll('.sort-dropdown-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  
+  // 화면에 표시되는 텍스트 변경
+  const selectedText = document.getElementById('selectedSort');
+  if (selectedText) selectedText.textContent = sortName;
+  
+  // 메뉴 닫기
+  const menu = document.getElementById('sortDropdownMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+// 3. 바탕화면 클릭 시 닫기 (투명한 막 해결)
+window.addEventListener('click', function(e) {
+  const menus = document.querySelectorAll('.dropdown-menu');
+  menus.forEach(menu => {
+      // 클릭한 곳이 메뉴 내부가 아니면 닫기
+      if (!menu.contains(e.target)) {
+          menu.classList.remove('show');
+      }
+  });
+});
+
+  function selectMiniSort(event, sortName) {
+    event.stopPropagation();
+    document.querySelectorAll('#miniSortMenu .sort-dropdown-item').forEach(item => item.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('miniSelectedSort').textContent = sortName;
+    document.getElementById('miniSortMenu').classList.remove('show');
+  }
+
+  // Meeting tab switching
+  function switchMeetingTab(el, type) {
+    document.querySelectorAll('.meeting-type-tab').forEach(tab => tab.classList.remove('active'));
+    el.classList.add('active');
+    
+    // Navigate to respective screens
+    if (type === 'flash') {
+      // Stay on current meeting screen
+      console.log('Flash meetings');
+    } else if (type === 'event') {
+      showScreen('event');
+    } else if (type === 'expert') {
+      showScreen('expert');
+    }
+  }
+
+  // Close dropdowns when clicking outside
+  // 바깥 클릭 시 모든 드롭다운 닫기
+  document.addEventListener('click', function(e) {
+    const menus = document.querySelectorAll('.sort-dropdown-menu');
+    const buttons = document.querySelectorAll('.sort-dropdown, .mini-dropdown');
+    
+    let isClickInside = false;
+    buttons.forEach(btn => {
+      if (btn.contains(e.target)) isClickInside = true;
+    });
+
+    if (!isClickInside) {
+      menus.forEach(menu => menu.classList.remove('show'));
+    }
+  });
+
+  // Chip toggle
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      const parent = this.closest('.chips-row, .keyword-section');
+      if (parent) {
+        parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      }
+      this.classList.add('active');
+    });
+  });
+
+  // Sort chips
+  document.querySelectorAll('.sort-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Cat category
+  document.querySelectorAll('.cat-item').forEach(item => {
+    item.addEventListener('click', function() {
+      this.closest('.category-scroll').querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // 기존의 모든 북마크 관련 코드(EventListener 포함)를 지우고 이것만 남기세요
+  function toggleBookmark(element) {
+    // 1. 상세페이지 이동 방지
+    if (window.event) window.event.stopPropagation();
+    
+    // 2. 클래스 토글 (넣었다 뺐다)
+    element.classList.toggle('active');
+    
+    // 3. 작동 확인 (F12 콘솔창에 찍힙니다)
+    console.log("발바닥 상태:", element.classList.contains('active') ? "ON" : "OFF");
+  }
+
+  // 초기화 (기존의 document.querySelectorAll 부분을 삭제하세요)
+  showScreen('home');
+  
+
+</script>
+</body>
+</html>
