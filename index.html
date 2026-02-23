@@ -603,12 +603,10 @@
     z-index: 10;
     margin-top: 0;
   }
-  .home-logo {
-    font-family: 'Black Han Sans', sans-serif;
-    font-size: 26px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .home-logo img {
+    height: 28px;   /* 원하는 크기 */
+    width: auto;
+    display: block;
   }
   .home-header-right { display: flex; gap: 8px; }
   .notif-btn {
@@ -631,7 +629,7 @@
     padding: 0 20px 89px; /* 원래 30px에서 45px로 늘려 하단 여백 확보 */
     overflow-x: auto; 
     scrollbar-width: none;
-    overflow-y: visible; /* hidden으로 바꾸지 마세요! 글씨가 가려집니다 */
+    overflow-y: hidden; /* hidden으로 바꾸지 마세요! 글씨가 가려집니다 */
     margin-bottom: 24px;
     white-space: nowrap; /* 한 줄 유지 추가 */
   }
@@ -1647,7 +1645,9 @@
       <div class="statusbar-icons">📶 🔋</div>
     </div>
     <div class="home-header">
-      <div class="home-logo">NYANG</div>
+      <div class="home-logo">
+        <img src="assets/Nyang_Logo.png" alt="Nyang Logo">
+      </div>
       <div class="home-header-right">
         <button class="topnav-icon-btn" onclick="showScreen('settings')">⚙️</button>
         <button class="topnav-icon-btn" onclick="showReportOverlay()" style="background:rgba(224,85,85,0.15);">🚨</button>
