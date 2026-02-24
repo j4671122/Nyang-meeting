@@ -1623,7 +1623,7 @@
       <input class="input-field" type="email" placeholder="Email" />
       <input class="input-field" type="password" placeholder="Password" />
       <div style="text-align:right; margin-top:-8px;">
-        <span style="font-size:12px; color:var(--accent); cursor:pointer;">Forgot password?</span>
+        <span style="font-size:12px; color:var(--accent); cursor:pointer;" onclick="showForgotPassword()">Forgot password?</span>
       </div>
       <button class="btn-primary" onclick="showScreen('home')">Sign In</button>
       <div class="login-or">or</div>
@@ -1657,31 +1657,31 @@
 
     <!-- Stories -->
     <div class="stories-row">
-      <div class="story-item">
+      <div class="story-item" onclick="showStoryDetail('Board Games', '🎲')">
         <div class="story-ring">
           <div class="story-inner">🐱</div>
         </div>
         <div class="story-name">Board<br>Games</div>
       </div>
-      <div class="story-item">
+      <div class="story-item" onclick="showStoryDetail('Futsal Match', '⚽')">
         <div class="story-ring">
           <div class="story-inner">⚽</div>
         </div>
         <div class="story-name">Futsal<br>Match</div>
       </div>
-      <div class="story-item">
+      <div class="story-item" onclick="showStoryDetail('Drawing Class', '🎨')">
         <div class="story-ring">
           <div class="story-inner">🎨</div>
         </div>
         <div class="story-name">Drawing<br>Class</div>
       </div>
-      <div class="story-item">
+      <div class="story-item" onclick="alert('No active stories')">
         <div class="story-ring inactive">
           <div class="story-inner">📚</div>
         </div>
         <div class="story-name">Book<br>Club</div>
       </div>
-      <div class="story-item">
+      <div class="story-item" onclick="alert('No active stories')">
         <div class="story-ring inactive">
           <div class="story-inner">🍜</div>
         </div>
@@ -1694,12 +1694,12 @@
       <div class="keyword-label"><span>#Recommended</span> meetups for you!</div>
       <div class="chips-row" style="padding:0;">
         <div class="chip active" onclick="showScreen('search')" style="padding:6px 10px;">🔍</div>
-        <div class="chip">#BoardGames</div>
-        <div class="chip">#Running</div>
-        <div class="chip">#FoodTour</div>
-        <div class="chip">#Reading</div>
-        <div class="chip">#English</div>
-        <div class="chip">#Yoga</div>
+        <div class="chip" onclick="filterByTag(this, 'BoardGames')">#BoardGames</div>
+        <div class="chip" onclick="filterByTag(this, 'Running')">#Running</div>
+        <div class="chip" onclick="filterByTag(this, 'FoodTour')">#FoodTour</div>
+        <div class="chip" onclick="filterByTag(this, 'Reading')">#Reading</div>
+        <div class="chip" onclick="filterByTag(this, 'English')">#English</div>
+        <div class="chip" onclick="filterByTag(this, 'Yoga')">#Yoga</div>
       </div>
     </div>
 
@@ -2244,14 +2244,14 @@
     <div class="detail-content">
       <div class="detail-type-badge">⚡ Flash Meeting</div>
       <div class="detail-title">Spontaneous Board Game Night 🎲</div>
-      <div class="detail-host">
+      <div class="detail-host" onclick="showUserProfile('Grumpy Cat', '😾')">
         <div class="host-avatar">😾</div>
         <div class="host-info">
           <div class="host-name">Grumpy Cat · Host</div>
           <div class="host-tag">12 hosted · ⭐ 4.9</div>
           <div class="host-verify">✅ ID verified</div>
         </div>
-        <button style="background:none; border:1px solid var(--border); border-radius:10px; color:var(--white); padding:6px 12px; font-size:12px; cursor:pointer; font-family:'Noto Sans';">Follow</button>
+        <button style="background:none; border:1px solid var(--border); border-radius:10px; color:var(--white); padding:6px 12px; font-size:12px; cursor:pointer; font-family:'Noto Sans';" onclick="event.stopPropagation(); alert('Following Grumpy Cat')">Follow</button>
       </div>
       <div class="detail-info-grid">
         <div class="info-tile">
@@ -2281,9 +2281,9 @@
         <div class="slots-bar"><div class="slots-fill" style="width:37.5%"></div></div>
         <div style="font-size:11px; color:var(--gray); margin-bottom:8px;">3 joined · 5 spots left</div>
         <div class="participants-row">
-          <div class="participant-avatar">😸</div>
-          <div class="participant-avatar">🐶</div>
-          <div class="participant-avatar">😺</div>
+          <div class="participant-avatar" onclick="showUserProfile('Sarah', '😸')">😸</div>
+          <div class="participant-avatar" onclick="showUserProfile('Mike', '🐶')">🐶</div>
+          <div class="participant-avatar" onclick="showUserProfile('Emma', '😺')">😺</div>
           <div style="font-size:12px; color:var(--gray); margin-left:4px;">+ 5 spots left</div>
         </div>
       </div>
@@ -2874,21 +2874,21 @@
     <div class="settings-section">
       <div style="padding: 4px 20px 8px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px;">Account</div>
       <div class="settings-group">
-        <div class="settings-item">
+        <div class="settings-item" onclick="editProfile()">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(240,164,85,0.15);">👤</div>
             <span class="settings-text">Account Management</span>
           </div>
           <span class="settings-arrow">›</span>
         </div>
-        <div class="settings-item">
+        <div class="settings-item" onclick="alert('ID Verification is already complete ✓')">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(85,200,144,0.15);">✅</div>
             <span class="settings-text">ID Verification</span>
           </div>
           <span style="font-size:11px; color:var(--success);">Complete</span>
         </div>
-        <div class="settings-item">
+        <div class="settings-item" onclick="alert('Language settings: English, Korean, Japanese')">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(85,96,240,0.15);">🌐</div>
             <span class="settings-text">Language</span>
@@ -2926,21 +2926,21 @@
     <div class="settings-section">
       <div style="padding: 4px 20px 8px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px;">App Info</div>
       <div class="settings-group">
-        <div class="settings-item">
+        <div class="settings-item" onclick="alert('Terms of Service\n\nBy using this app, you agree to...')">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(160,160,200,0.1);">📋</div>
             <span class="settings-text">Terms of Service</span>
           </div>
           <span class="settings-arrow">›</span>
         </div>
-        <div class="settings-item">
+        <div class="settings-item" onclick="alert('Privacy Policy\n\nWe respect your privacy...')">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(160,160,200,0.1);">🔒</div>
             <span class="settings-text">Privacy Policy</span>
           </div>
           <span class="settings-arrow">›</span>
         </div>
-        <div class="settings-item">
+        <div class="settings-item" onclick="alert('Nyang Meeting v1.0.0\n\nBuild: 2026.02.24\nLast updated: Feb 24, 2026')">
           <div class="settings-left">
             <div class="settings-icon" style="background:rgba(160,160,200,0.1);">ℹ️</div>
             <span class="settings-text">Version Info</span>
@@ -2951,7 +2951,7 @@
     </div>
     <div class="version-text">Nyang Meeting v1.0.0 · Made with 😾 by SCC</div>
     <div style="padding: 0 20px 30px;">
-      <button class="btn-secondary" style="color:var(--danger); border-color:rgba(224,85,85,0.3);" onclick="showScreen('login')">Sign Out</button>
+      <button class="btn-secondary" style="color:var(--danger); border-color:rgba(224,85,85,0.3);" onclick="logout()">Sign Out</button>
     </div>
   </div>
 
@@ -3168,6 +3168,124 @@
       <!-- Events will be populated by JavaScript -->
     </div>
     <button style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px; width:100%; margin-top:16px; color:var(--white); font-size:14px; cursor:pointer; font-family:'Noto Sans', sans-serif;" onclick="closeCalendarEvent()">Close</button>
+  </div>
+</div>
+
+<!-- ════════════ STORY DETAIL OVERLAY ════════════ -->
+<div class="overlay" id="storyDetailOverlay" onclick="closeStoryDetail()">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:80vh; overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center; padding:20px;">
+      <div style="font-size:80px; margin-bottom:16px;" id="storyEmoji">🎲</div>
+      <div style="font-size:22px; font-weight:700; margin-bottom:8px; color:var(--white);" id="storyTitle">Board Games</div>
+      <div style="font-size:13px; color:var(--gray); margin-bottom:24px;">Posted 2 hours ago</div>
+      
+      <!-- Story Image -->
+      <div style="width:100%; height:280px; border-radius:16px; background:linear-gradient(135deg, var(--blue-bg), var(--surface2)); display:flex; align-items:center; justify-content:center; font-size:100px; margin-bottom:20px;">
+        🎲
+      </div>
+      
+      <!-- Story Content -->
+      <div style="text-align:left; margin-bottom:20px;">
+        <div style="font-size:15px; line-height:1.6; color:var(--white); margin-bottom:12px;">
+          Had an amazing board game night tonight! We played Catan, Ticket to Ride, and Codenames. 12 people showed up and everyone had a blast! 🎉
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:4px 12px; border-radius:12px; font-size:11px; font-weight:600;">#BoardGames</span>
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:4px 12px; border-radius:12px; font-size:11px; font-weight:600;">#Catan</span>
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:4px 12px; border-radius:12px; font-size:11px; font-weight:600;">#Fun</span>
+        </div>
+      </div>
+      
+      <!-- Story Stats -->
+      <div style="display:flex; justify-content:space-around; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:20px;">
+        <div style="text-align:center;">
+          <div style="font-size:20px; font-weight:700; color:var(--blue-primary);">12</div>
+          <div style="font-size:11px; color:var(--gray);">Attended</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:20px; font-weight:700; color:var(--blue-primary);">45</div>
+          <div style="font-size:11px; color:var(--gray);">Reactions</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:20px; font-weight:700; color:var(--blue-primary);">8</div>
+          <div style="font-size:11px; color:var(--gray);">Shares</div>
+        </div>
+      </div>
+      
+      <button class="btn-primary" onclick="closeStoryDetail(); showScreen('detail');">View Meeting Details</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ FORGOT PASSWORD OVERLAY ════════════ -->
+<div class="overlay" id="forgotPasswordOverlay" onclick="closeForgotPassword()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div style="padding:20px;">
+      <div style="font-size:20px; font-weight:700; margin-bottom:8px; color:var(--white);">Reset Password</div>
+      <div style="font-size:13px; color:var(--gray); margin-bottom:24px;">Enter your email and we'll send you a link to reset your password.</div>
+      
+      <input class="input-field" type="email" id="resetEmail" placeholder="Enter your email" style="margin-bottom:16px;" />
+      
+      <button class="btn-primary" onclick="resetPassword()">Send Reset Link</button>
+      <button class="btn-secondary" onclick="closeForgotPassword()" style="margin-top:10px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ USER PROFILE OVERLAY ════════════ -->
+<div class="overlay" id="userProfileOverlay" onclick="closeUserProfile()">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:85vh; overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:24px;">
+      <!-- Profile Header -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="width:100px; height:100px; margin:0 auto 12px; border-radius:50%; background:linear-gradient(135deg, var(--blue-primary), var(--blue-light)); display:flex; align-items:center; justify-content:center; font-size:50px; border:4px solid var(--surface);" id="profileUserEmoji">😸</div>
+        <div style="font-size:22px; font-weight:700; margin-bottom:4px; color:var(--white);" id="profileUserName">Sarah</div>
+        <div style="display:inline-block; background:var(--success); color:white; padding:4px 12px; border-radius:12px; font-size:11px; font-weight:600;">✓ Verified</div>
+      </div>
+      
+      <!-- Stats -->
+      <div style="display:flex; justify-content:space-around; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:20px;">
+        <div style="text-align:center;">
+          <div style="font-size:18px; font-weight:700; color:var(--blue-primary);">24</div>
+          <div style="font-size:11px; color:var(--gray);">Joined</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px; font-weight:700; color:var(--blue-primary);">8</div>
+          <div style="font-size:11px; color:var(--gray);">Hosted</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px; font-weight:700; color:var(--blue-primary);">156</div>
+          <div style="font-size:11px; color:var(--gray);">Friends</div>
+        </div>
+      </div>
+      
+      <!-- Bio -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px; color:var(--gray); margin-bottom:8px;">MBTI: ENFP · Love board games / running / food tours</div>
+        <div style="font-size:14px; color:var(--white); line-height:1.5;">😺 People say I look scary but I'm actually friendly! Always up for board games and good food.</div>
+      </div>
+      
+      <!-- Interests -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:13px; font-weight:700; color:var(--gray); margin-bottom:10px;">INTERESTS</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:6px 14px; border-radius:16px; font-size:12px; font-weight:600;">#BoardGames</span>
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:6px 14px; border-radius:16px; font-size:12px; font-weight:600;">#Running</span>
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:6px 14px; border-radius:16px; font-size:12px; font-weight:600;">#ENFP</span>
+          <span style="background:var(--blue-bg); color:var(--blue-primary); padding:6px 14px; border-radius:16px; font-size:12px; font-weight:600;">#Seoul</span>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <button class="btn-primary" onclick="messageUser(document.getElementById('profileUserName').textContent)">💬 Send Message</button>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn-secondary" style="flex:1;" onclick="addFriend(document.getElementById('profileUserName').textContent)">Add Friend</button>
+        <button class="btn-secondary" style="flex:1; background:var(--danger); color:white; border:none;" onclick="blockUser(document.getElementById('profileUserName').textContent)">Block</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3508,6 +3626,140 @@ window.addEventListener('click', function(e) {
     
     // 3. 작동 확인 (F12 콘솔창에 찍힙니다)
     console.log("발바닥 상태:", element.classList.contains('active') ? "ON" : "OFF");
+  }
+
+  // ═══════════════ NEW INTERACTION FUNCTIONS ═══════════════
+  
+  // Story detail overlay
+  function showStoryDetail(title, emoji) {
+    const overlay = document.getElementById('storyDetailOverlay');
+    if (overlay) {
+      document.getElementById('storyTitle').textContent = title;
+      document.getElementById('storyEmoji').textContent = emoji;
+      overlay.classList.add('show');
+    }
+  }
+
+  function closeStoryDetail() {
+    const overlay = document.getElementById('storyDetailOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  // Filter by tag
+  function filterByTag(el, tag) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    alert(`Filtering meetings by: ${tag}`);
+  }
+
+  // Forgot password
+  function showForgotPassword() {
+    const overlay = document.getElementById('forgotPasswordOverlay');
+    if (overlay) overlay.classList.add('show');
+  }
+
+  function closeForgotPassword() {
+    const overlay = document.getElementById('forgotPasswordOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  function resetPassword() {
+    const email = document.getElementById('resetEmail');
+    if (!email || !email.value) {
+      alert('Please enter your email');
+      return;
+    }
+    closeForgotPassword();
+    alert('Password reset link sent to ' + email.value);
+  }
+
+  // User profile view overlay
+  function showUserProfile(name, emoji) {
+    const overlay = document.getElementById('userProfileOverlay');
+    if (overlay) {
+      document.getElementById('profileUserName').textContent = name;
+      document.getElementById('profileUserEmoji').textContent = emoji;
+      overlay.classList.add('show');
+    }
+  }
+
+  function closeUserProfile() {
+    const overlay = document.getElementById('userProfileOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  // Share meeting
+  function shareMeeting() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Board Game Night',
+        text: 'Join me at this awesome meetup!',
+        url: window.location.href
+      }).catch(() => alert('Share cancelled'));
+    } else {
+      alert('Share link copied to clipboard!');
+    }
+  }
+
+  // Message user
+  function messageUser(name) {
+    alert(`Opening chat with ${name}...`);
+  }
+
+  // Add friend
+  function addFriend(name) {
+    alert(`Friend request sent to ${name}!`);
+  }
+
+  // Block user
+  function blockUser(name) {
+    if (confirm(`Are you sure you want to block ${name}?`)) {
+      alert(`${name} has been blocked.`);
+    }
+  }
+
+  // Edit profile
+  function editProfile() {
+    showScreen('edit-profile');
+  }
+
+  // Delete account confirmation
+  function deleteAccount() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      if (confirm('Final confirmation: Delete account permanently?')) {
+        alert('Account deleted. Redirecting to login...');
+        showScreen('login');
+      }
+    }
+  }
+
+  // Logout
+  function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+      alert('Logged out successfully');
+      showScreen('login');
+    }
+  }
+
+  // Contact support
+  function contactSupport() {
+    window.open('mailto:support@nyangmeeting.com');
+  }
+
+  // Leave meeting
+  function leaveMeeting() {
+    if (confirm('Are you sure you want to leave this meeting?')) {
+      alert('You have left the meeting');
+      showScreen('home');
+    }
+  }
+
+  // Cancel meeting (host)
+  function cancelMeeting() {
+    if (confirm('Are you sure you want to cancel this meeting? All participants will be notified.')) {
+      alert('Meeting cancelled');
+      showScreen('home');
+    }
   }
 
   // 초기화 (기존의 document.querySelectorAll 부분을 삭제하세요)
